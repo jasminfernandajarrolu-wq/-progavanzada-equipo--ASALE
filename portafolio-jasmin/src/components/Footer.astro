@@ -1,0 +1,34 @@
+---
+import { personalInfo } from '../data/personalInfo';
+
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="mt-auto border-t border-slate-800/80 bg-[#070a12] text-slate-400 py-10">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+    <div class="space-y-1 text-center sm:text-left">
+      <div class="flex items-center justify-center sm:justify-start gap-2">
+        <span class="w-6 h-6 rounded-md bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white text-[10px] font-mono font-bold">
+          &lt;/&gt;
+        </span>
+        <span class="font-bold text-white text-sm">{personalInfo.name}</span>
+        <span class="text-xs text-slate-500">|</span>
+        <span class="text-xs text-slate-400">{personalInfo.career}</span>
+      </div>
+      <p class="text-xs text-slate-500">
+        Portafolio web personal desarrollado con <a href="https://astro.build" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">Astro</a> y <a href="https://tailwindcss.com" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:underline">Tailwind CSS</a>.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-4 text-xs">
+      <a href="#sobre-mi" class="hover:text-white transition-colors">Sobre mí</a>
+      <a href="#materias" class="hover:text-white transition-colors">Materias</a>
+      <a href="#personales" class="hover:text-white transition-colors">Proyectos Personales</a>
+      <a href="#contacto" class="hover:text-white transition-colors">Contacto</a>
+    </div>
+
+    <p class="text-xs text-slate-600 text-center sm:text-right">
+      © {currentYear} {personalInfo.name}. Todos los derechos reservados.
+    </p>
+  </div>
+</footer>

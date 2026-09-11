@@ -1,0 +1,164 @@
+---
+// Componente de diálogo modal nativo accesible para ver detalles ampliados de cualquier proyecto
+---
+
+<dialog
+  id="project-dialog"
+  class="m-auto backdrop:bg-black/80 backdrop:backdrop-blur-sm bg-[#0e1626] border border-slate-700/80 text-slate-100 rounded-2xl p-0 max-w-2xl w-[92vw] shadow-2xl overflow-hidden open:animate-in open:fade-in open:zoom-in-95"
+>
+  <div class="flex flex-col max-h-[85vh]">
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-[#090d16]">
+      <div class="flex items-center gap-2">
+        <span id="modal-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+          Proyecto
+        </span>
+        <span id="modal-category" class="text-xs text-slate-400"></span>
+      </div>
+      <button
+        id="modal-close-btn"
+        type="button"
+        class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+        aria-label="Cerrar modal"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Content (Scrollable) -->
+    <div class="p-6 space-y-5 overflow-y-auto">
+      <div>
+        <h3 id="modal-title" class="text-xl sm:text-2xl font-bold text-white"></h3>
+        <p id="modal-subtitle" class="text-sm text-cyan-400 font-mono mt-1"></p>
+      </div>
+
+      <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
+        <h4 class="text-xs font-mono uppercase text-slate-400 font-bold mb-1">Descripción del Sistema</h4>
+        <p id="modal-description" class="text-sm text-slate-300 leading-relaxed"></p>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-mono uppercase text-slate-400 font-bold">Características y Aspectos Destacados</h4>
+        <ul id="modal-features" class="space-y-1.5 text-xs sm:text-sm text-slate-300"></ul>
+      </div>
+
+      <div class="space-y-2 pt-2">
+        <h4 class="text-xs font-mono uppercase text-slate-400 font-bold">Tecnologías Utilizadas</h4>
+        <div id="modal-techs" class="flex flex-wrap gap-1.5"></div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 py-4 border-t border-slate-800 bg-[#090d16] flex items-center justify-between gap-3">
+      <a
+        id="modal-github-link"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition-colors"
+      >
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+
+      <button
+        id="modal-close-footer"
+        type="button"
+        class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition-colors"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('project-dialog') as HTMLDialogElement | null;
+  const closeBtn = document.getElementById('modal-close-btn');
+  const closeFooterBtn = document.getElementById('modal-close-footer');
+
+  const titleEl = document.getElementById('modal-title');
+  const subtitleEl = document.getElementById('modal-subtitle');
+  const badgeEl = document.getElementById('modal-badge');
+  const categoryEl = document.getElementById('modal-category');
+  const descEl = document.getElementById('modal-description');
+  const featuresEl = document.getElementById('modal-features');
+  const techsEl = document.getElementById('modal-techs');
+  const githubEl = document.getElementById('modal-github-link') as HTMLAnchorElement | null;
+
+  function closeModal() {
+    if (dialog && dialog.open) {
+      dialog.close();
+    }
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (closeFooterBtn) closeFooterBtn.addEventListener('click', closeModal);
+
+  // Close when clicking outside dialog backdrop
+  if (dialog) {
+    dialog.addEventListener('click', (e) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog = (
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width
+      );
+      if (!isInDialog) {
+        dialog.close();
+      }
+    });
+  }
+
+  // Global listener for open-project-modal custom event or data attributes
+  document.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest('[data-open-modal]');
+    if (!target || !dialog) return;
+
+    const dataRaw = target.getAttribute('data-project-json');
+    if (!dataRaw) return;
+
+    try {
+      const data = JSON.parse(dataRaw);
+      if (titleEl) titleEl.textContent = data.title || '';
+      if (subtitleEl) subtitleEl.textContent = data.subtitle || data.course || '';
+      if (badgeEl) badgeEl.textContent = data.badge || (data.course ? 'Proyecto de Materia' : 'Proyecto Personal');
+      if (categoryEl) categoryEl.textContent = data.semester || data.status || '';
+      if (descEl) descEl.textContent = data.fullDescription || data.shortDescription || '';
+      
+      if (featuresEl) {
+        featuresEl.innerHTML = '';
+        const items = data.keyFeatures || data.highlights || [];
+        items.forEach((item: string) => {
+          const li = document.createElement('li');
+          li.className = 'flex items-start gap-2';
+          li.innerHTML = `<span class="text-cyan-400 mt-0.5">✦</span><span>${item}</span>`;
+          featuresEl.appendChild(li);
+        });
+      }
+
+      if (techsEl) {
+        techsEl.innerHTML = '';
+        (data.technologies || []).forEach((t: string) => {
+          const span = document.createElement('span');
+          span.className = 'px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-200 border border-slate-700';
+          span.textContent = t;
+          techsEl.appendChild(span);
+        });
+      }
+
+      if (githubEl) {
+        githubEl.href = data.links?.github || 'https://github.com/';
+      }
+
+      dialog.showModal();
+    } catch (err) {
+      console.error('Error opening project details:', err);
+    }
+  });
+</script>

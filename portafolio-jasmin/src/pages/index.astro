@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Hero from '../components/Hero.astro';
+import AcademicProjects from '../components/AcademicProjects.astro';
+import PersonalProjects from '../components/PersonalProjects.astro';
+import SkillsSection from '../components/SkillsSection.astro';
+import ContactSection from '../components/ContactSection.astro';
+import ProjectModal from '../components/ProjectModal.astro';
+import Footer from '../components/Footer.astro';
+import { personalInfo } from '../data/personalInfo';
+---
+
+<Layout
+  title={`${personalInfo.name} | Portafolio - ${personalInfo.career} & ${personalInfo.specialty}`}
+  description={`${personalInfo.name} - Estudiante de ${personalInfo.career}, especialista en ${personalInfo.specialty}. Portafolio con proyectos de materias y proyectos personales.`}
+>
+  <Navbar />
+  <main class="flex-1">
+    <Hero />
+    <AcademicProjects />
+    <PersonalProjects />
+    <SkillsSection />
+    <ContactSection />
+  </main>
+  <ProjectModal />
+  <Footer />
+</Layout>

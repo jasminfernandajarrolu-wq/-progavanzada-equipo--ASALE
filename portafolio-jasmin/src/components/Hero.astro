@@ -1,0 +1,186 @@
+---
+import { personalInfo } from '../data/personalInfo';
+---
+
+<section id="sobre-mi" class="pt-10 pb-16 md:py-20 max-w-6xl mx-auto px-4 sm:px-6">
+  <!-- Top availability badge -->
+  <div class="flex items-center gap-2 mb-6">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      {personalInfo.availability}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+    <!-- Left column: Presentation and Bio -->
+    <div class="lg:col-span-7 space-y-6">
+      <div class="space-y-2">
+        <p class="text-sm font-mono font-semibold tracking-wider text-blue-400 uppercase">
+          ¡Hola! Bienvenidos a mi portafolio 👋
+        </p>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+          Soy <span class="bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">{personalInfo.name}</span>
+        </h1>
+        <h2 class="text-xl sm:text-2xl font-semibold text-slate-300">
+          {personalInfo.career} <span class="text-slate-500 font-normal">|</span> <span class="text-cyan-400">{personalInfo.specialty}</span>
+        </h2>
+      </div>
+
+      <p class="text-base sm:text-lg text-slate-300/90 leading-relaxed font-normal">
+        {personalInfo.bio}
+      </p>
+
+      <!-- Detailed About Me Cards -->
+      <div class="space-y-3 pt-2">
+        {personalInfo.aboutMeLong.map((paragraph, index) => (
+          <div class="flex items-start gap-3 text-sm text-slate-400 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/80">
+            <span class="text-blue-400 mt-0.5 text-base select-none">
+              {index === 0 ? '💻' : index === 1 ? '🚀' : '🎯'}
+            </span>
+            <p class="leading-relaxed">{paragraph}</p>
+          </div>
+        ))}
+      </div>
+
+      <!-- Quick Contact & Action Buttons -->
+      <div class="pt-4 flex flex-wrap items-center gap-3">
+        <!-- WhatsApp direct button -->
+        <a
+          href={personalInfo.phone.whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-sm shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
+        >
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.181-.076.355.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/>
+          </svg>
+          <span>WhatsApp: {personalInfo.phone.display}</span>
+        </a>
+
+        <!-- Explore Projects button -->
+        <a
+          href="#materias"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-200 hover:text-white font-medium text-sm transition-all hover:scale-[1.02]"
+        >
+          <span>Ver Proyectos de Materias</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </a>
+
+        <!-- Personal projects button -->
+        <a
+          href="#personales"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-slate-400 hover:text-cyan-400 hover:bg-slate-800/40 text-sm font-medium transition-colors"
+        >
+          <span>Proyectos Personales</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Social Icons Row -->
+      <div class="pt-2 flex items-center gap-4 text-slate-400">
+        <span class="text-xs font-mono uppercase tracking-wider text-slate-500">Conectar:</span>
+        {personalInfo.socials.map((social) => (
+          <a
+            href={social.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-blue-400 transition-colors bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800"
+            title={social.username}
+          >
+            <span>{social.name}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <!-- Right column: Interactive Profile Card & Stats -->
+    <div class="lg:col-span-5 space-y-6">
+      <div class="relative">
+        <!-- Decorative back glow -->
+        <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-500"></div>
+
+        <!-- Glassmorphism Card -->
+        <div class="relative rounded-2xl bg-gradient-to-b from-[#10192e] to-[#0c1220] border border-blue-500/20 p-6 sm:p-7 shadow-2xl space-y-6">
+          <!-- Card Header with Avatar / Badge -->
+          <div class="flex items-center gap-4">
+            <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-cyan-500 to-teal-400 p-[2px] shadow-lg shadow-blue-500/20 flex-shrink-0">
+              <div class="w-full h-full bg-[#090d16] rounded-2xl flex items-center justify-center font-mono font-bold text-lg text-cyan-400">
+                &lt;JF/&gt;
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-bold text-white leading-tight">{personalInfo.name}</h3>
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">{personalInfo.career}</p>
+              <p class="text-xs text-emerald-400 font-medium mt-0.5">● {personalInfo.specialty}</p>
+            </div>
+          </div>
+
+          <!-- The 3 Projects List Preview -->
+          <div class="space-y-2.5 pt-2">
+            <p class="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
+              Los 3 Proyectos del Portafolio:
+            </p>
+
+            <a href="#sistema-sar" class="block p-3 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-blue-500/40 transition-colors group">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-blue-400 flex items-center gap-1.5">
+                  <span>🏢</span> Gestión de Sistemas para el SAR
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 font-mono">
+                  Prog. II
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 line-clamp-1">
+                Control de procesos, inventario de infraestructura, RBAC y auditoría.
+              </p>
+            </a>
+
+            <a href="#sistema-starbucks" class="block p-3 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition-colors group">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+                  <span>☕</span> Cafetería Starbucks
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-mono">
+                  Prog. I
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 line-clamp-1">
+                POS, toma ágil de órdenes, personalizador dinámico y stock de insumos.
+              </p>
+            </a>
+
+            <a href="#sistema-hyc-fitness" class="block p-3 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition-colors group">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-cyan-400 flex items-center gap-1.5">
+                  <span>🏋️</span> Gimnasio HyC Fitness
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-mono">
+                  Prog. III
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 line-clamp-1">
+                Gestión de socios, control de membresías, acceso diario y dashboard.
+              </p>
+            </a>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800/80">
+            {personalInfo.stats.map((stat) => (
+              <div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                <div class="text-lg font-bold font-mono text-white">{stat.value}</div>
+                <div class="text-xs text-slate-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

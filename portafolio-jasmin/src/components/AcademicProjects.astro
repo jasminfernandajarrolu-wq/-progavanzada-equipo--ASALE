@@ -1,0 +1,161 @@
+---
+import { academicProjects } from '../data/academicProjects';
+---
+
+<section id="materias" class="py-16 md:py-24 border-t border-slate-800/80 max-w-6xl mx-auto px-4 sm:px-6">
+  <!-- Section Title -->
+  <div class="space-y-3 mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+      <span>📚 Sección 2</span>
+      <span>•</span>
+      <span>Trabajos Universitarios y Escolares</span>
+    </div>
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
+      Proyectos de Materias
+    </h2>
+    <p class="text-slate-400 max-w-3xl text-sm sm:text-base leading-relaxed">
+      Sistemas y aplicaciones diseñados para asignaturas de la carrera de <strong>Ingeniería de Sistemas</strong>. Demuestran la aplicación práctica de principios de ingeniería de software, arquitectura de datos, patrones de diseño y estándares web.
+    </p>
+  </div>
+
+  <!-- Projects List / Grid -->
+  <div class="space-y-10">
+    {academicProjects.map((project) => (
+      <article
+        id={project.id}
+        class="group relative rounded-2xl bg-gradient-to-b from-[#11192e] to-[#0c1221] border border-slate-800 hover:border-emerald-500/40 transition-all duration-300 p-6 sm:p-8 shadow-xl overflow-hidden"
+      >
+        <!-- Background decorative ambient gradient -->
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/10 transition-colors"></div>
+
+        <div class="relative z-10 space-y-6">
+          <!-- Top Row: Course & Semester Badges -->
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Materia: {project.course}
+              </span>
+
+              <span class="px-2.5 py-1 rounded-lg text-xs font-mono text-slate-400 bg-slate-900 border border-slate-800">
+                {project.semester}
+              </span>
+
+              {project.teamSize && (
+                <span class="px-2.5 py-1 rounded-lg text-xs text-slate-400 bg-slate-900 border border-slate-800">
+                  👥 {project.teamSize}
+                </span>
+              )}
+            </div>
+
+            {project.gradeBadge && (
+              <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                <span>⭐</span> {project.gradeBadge}
+              </span>
+            )}
+          </div>
+
+          <!-- Project Title & Descriptions -->
+          <div class="space-y-3">
+            <h3 class="text-xl sm:text-2xl font-bold text-white group-hover:text-emerald-300 transition-colors">
+              {project.title}
+            </h3>
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+              {project.shortDescription}
+            </p>
+            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed bg-slate-900/50 p-4 rounded-xl border border-slate-800/60">
+              <strong class="text-slate-200">Contexto del desarrollo:</strong> {project.fullDescription}
+            </p>
+          </div>
+
+          <!-- Two-column details: Objectives and Key Features -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+            <!-- Objectives -->
+            <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800/60 space-y-2">
+              <h4 class="text-xs font-mono uppercase font-bold text-emerald-400 flex items-center gap-1.5">
+                <span>🎯</span> Objetivos de la Materia
+              </h4>
+              <ul class="space-y-1.5 text-xs text-slate-300">
+                {project.objectives.map((obj) => (
+                  <li class="flex items-start gap-2">
+                    <span class="text-emerald-400 mt-0.5">•</span>
+                    <span>{obj}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <!-- Features -->
+            <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800/60 space-y-2">
+              <h4 class="text-xs font-mono uppercase font-bold text-cyan-400 flex items-center gap-1.5">
+                <span>⚡</span> Funcionalidades del Sistema
+              </h4>
+              <ul class="space-y-1.5 text-xs text-slate-300">
+                {project.keyFeatures.map((feature) => (
+                  <li class="flex items-start gap-2">
+                    <span class="text-cyan-400 mt-0.5">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <!-- Technologies & Action Links Footer -->
+          <div class="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
+            <!-- Tech Badges -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-xs text-slate-400 font-mono mr-1">Stack:</span>
+              {project.technologies.map((tech) => (
+                <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800/90 text-slate-200 border border-slate-700/60">
+                  {tech}
+                </span>
+              ))}
+            </div>
+
+            <!-- Links -->
+            <div class="flex items-center gap-2">
+              {project.links.github && (
+                <a
+                  href={project.links.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium border border-slate-700 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                  Repositorio
+                </a>
+              )}
+              <button
+                type="button"
+                data-open-modal
+                data-project-json={JSON.stringify({
+                  title: project.title,
+                  course: project.course,
+                  semester: project.semester,
+                  badge: `Materia: ${project.course}`,
+                  shortDescription: project.shortDescription,
+                  fullDescription: project.fullDescription,
+                  keyFeatures: project.keyFeatures,
+                  technologies: project.technologies,
+                  links: project.links
+                })}
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+              >
+                <span>Ver Ficha Técnica</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>

@@ -1,0 +1,145 @@
+---
+import { personalProjects } from '../data/personalProjects';
+---
+
+<section id="personales" class="py-16 md:py-24 border-t border-slate-800/80 max-w-6xl mx-auto px-4 sm:px-6">
+  <!-- Section Title -->
+  <div class="space-y-3 mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+      <span>🚀 Sección 3</span>
+      <span>•</span>
+      <span>Iniciativa Propia & Desarrollo Autónomo</span>
+    </div>
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
+      Proyectos Personales
+    </h2>
+    <p class="text-slate-400 max-w-3xl text-sm sm:text-base leading-relaxed">
+      Aplicaciones web y plataformas desarrolladas de manera independiente para resolver problemáticas operativas reales, automatizar negocios y aplicar tecnologías frontend de vanguardia.
+    </p>
+  </div>
+
+  <!-- Featured Project Card -->
+  <div class="space-y-8">
+    {personalProjects.map((project) => (
+      <article
+        id={project.id}
+        class="group relative rounded-3xl bg-gradient-to-b from-[#11192e] to-[#0c1221] border border-cyan-500/30 ring-1 ring-cyan-500/20 transition-all duration-300 p-6 sm:p-10 shadow-2xl overflow-hidden"
+      >
+        <!-- Ambient glow effect -->
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-cyan-500/15 transition-colors"></div>
+
+        <div class="relative z-10 space-y-6">
+          <!-- Top Row: Tag & Status -->
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-semibold bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                {project.bannerTag}
+              </span>
+              <span class="text-xs text-slate-400 font-mono hidden sm:inline-block">
+                Desarrollo Independiente
+              </span>
+            </div>
+
+            <span class="text-xs font-mono px-3 py-1 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-medium">
+              ✓ {project.status}
+            </span>
+          </div>
+
+          <!-- Titles & Description -->
+          <div class="space-y-3">
+            <div class="flex items-start gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-2xl flex-shrink-0">
+                🏋️
+              </div>
+              <div>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-white group-hover:text-cyan-300 transition-colors">
+                  {project.title}
+                </h3>
+                <p class="text-xs sm:text-sm font-mono text-cyan-400/90 font-medium mt-0.5">
+                  {project.subtitle}
+                </p>
+              </div>
+            </div>
+
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+              {project.shortDescription}
+            </p>
+
+            <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <strong class="text-slate-200">Propósito y valor del sistema:</strong> {project.fullDescription}
+            </div>
+          </div>
+
+          <!-- Highlights Grid -->
+          <div class="space-y-3 pt-2">
+            <h4 class="text-xs font-mono uppercase text-slate-400 font-bold tracking-wider flex items-center gap-1.5">
+              <span>✦</span> Módulos y Funcionalidades Principales:
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {project.highlights.map((highlight) => (
+                <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 text-xs text-slate-300">
+                  <span class="text-cyan-400 text-sm">✓</span>
+                  <span>{highlight}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <!-- Footer: Techs & Actions -->
+          <div class="pt-6 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
+            <!-- Tech Badges -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-xs text-slate-400 font-mono mr-1">Stack:</span>
+              {project.technologies.map((tech) => (
+                <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-200 border border-slate-700/60">
+                  {tech}
+                </span>
+              ))}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2">
+              {project.links.github && (
+                <a
+                  href={project.links.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                  Repositorio
+                </a>
+              )}
+
+              <button
+                type="button"
+                data-open-modal
+                data-project-json={JSON.stringify({
+                  title: project.title,
+                  subtitle: project.subtitle,
+                  status: project.status,
+                  badge: `Proyecto Personal: ${project.bannerTag}`,
+                  shortDescription: project.shortDescription,
+                  fullDescription: project.fullDescription,
+                  keyFeatures: project.highlights,
+                  technologies: project.technologies,
+                  links: project.links
+                })}
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+              >
+                <span>Ver Ficha Técnica Completa</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
