@@ -10,6 +10,13 @@ export function DashboardView({ data, lowStockItems, getFinancialSum }) {
 
   return (
     <div>
+      <section className="hero-banner">
+        <div>
+          <h2>Bienvenidos a Sabores Bolivianos</h2>
+          <p>Tradición, sabor y buena cocina en cada plato</p>
+        </div>
+      </section>
+
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-label">

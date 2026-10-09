@@ -3,19 +3,18 @@ import { Sun, Moon, UtensilsCrossed } from 'lucide-react';
 
 export function Header({ theme, onToggleTheme }) {
   return (
-    <header>
+    <header className="app-header">
       <div className="header-top">
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="brand">
+          <span className="brand-logo" aria-hidden="true">🍲</span>
+          <div>
             <span className="brand-badge">
               <UtensilsCrossed size={14} /> Cochabamba · Bolivia
             </span>
-          </div>
-          <h1 style={{ fontSize: '28px', fontWeight: '800', marginTop: '6px' }}>
-            🍲 Sabores del Altiplano
-          </h1>
-          <div className="text-mut" style={{ fontSize: '14px', marginTop: '2px' }}>
-            Sistema de gestión gastronómica y control de cocina
+            <h1 className="brand-title">Sabores Bolivianos</h1>
+            <div className="brand-subtitle">
+              Comida típica boliviana · Sistema de gestión del restaurante
+            </div>
           </div>
         </div>
 
