@@ -329,8 +329,7 @@ export function useRestaurantState() {
       });
 
       showToast(
-        `Pedido #${orderNumber} registrado con éxito. Stock descontado${
-          hasLowStock ? ' · ¡Hay alertas de stock por reponer!' : ''
+        `Pedido #${orderNumber} registrado con éxito. Stock descontado${hasLowStock ? ' · ¡Hay alertas de stock por reponer!' : ''
         }`
       );
       return true;
