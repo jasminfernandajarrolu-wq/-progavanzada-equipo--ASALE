@@ -1,6 +1,6 @@
 # Tareas 001: Buscador de platos
 
-- [ ] T1. Crear src/utils/dishSearch.js con normalizeText y filterDishes (RF-04 a RF-07, RF-09).
+- [x] T1. Crear src/utils/dishSearch.js con normalizeText y filterDishes (RF-04 a RF-07, RF-09).
 - [ ] T2. En DishesView.jsx, agregar el estado search y calcular filtered con filterDishes.
 - [ ] T3. Agregar el campo de búsqueda con ícono y placeholder "Buscar plato por nombre" (RF-01, RF-02, RF-03).
 - [ ] T4. Recorrer filtered en la cuadrícula y mostrar "No se encontraron platos" cuando no hay coincidencias (RF-08, CL-05).
