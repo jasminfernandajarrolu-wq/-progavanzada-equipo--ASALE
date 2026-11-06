@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bs } from '../../data/seedData';
-import { Plus, Trash2, Eye } from 'lucide-react';
+import { Plus, Trash2, Eye, Search } from 'lucide-react';
+import { filterDishes } from '../../utils/dishSearch';
 import { Modal } from '../Modal';
 
 // Convierte "Pollo al maní" -> "pollo-al-mani"
@@ -49,6 +50,8 @@ function DishPhoto({ name }) {
 
 export function DishesView({ data, onAddDish, onDeleteItem, getIngredient, readOnly = false }) {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const filtered = filterDishes(data.plat, search);
   const [dishName, setDishName] = useState('');
   const [dishPrice, setDishPrice] = useState('');
   const [recipes, setRecipes] = useState([
@@ -123,9 +126,23 @@ export function DishesView({ data, onAddDish, onDeleteItem, getIngredient, readO
         )}
       </div>
 
+      {data.plat.length > 0 && (
+        <div className="dish-search">
+          <Search size={16} />
+          <input
+            type="text"
+            className="form-input dish-search-input"
+            placeholder="Buscar plato por nombre"
+            aria-label="Buscar plato por nombre"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      )}
+
       {data.plat.length > 0 ? (
         <div className="dishes-grid">
-          {data.plat.map((p) => (
+          {filtered.map((p) => (
             <article key={p.id} className="dish-tile">
               <DishPhoto name={p.n} />
 
@@ -171,6 +188,14 @@ export function DishesView({ data, onAddDish, onDeleteItem, getIngredient, readO
         <div className="content-box">
           <p className="text-mut" style={{ textAlign: 'center', padding: '16px' }}>
             No hay platos configurados en la carta.
+          </p>
+        </div>
+      )}
+
+      {data.plat.length > 0 && filtered.length === 0 && (
+        <div className="content-box">
+          <p className="text-mut" style={{ textAlign: 'center', padding: '16px' }}>
+            No se encontraron platos
           </p>
         </div>
       )}
