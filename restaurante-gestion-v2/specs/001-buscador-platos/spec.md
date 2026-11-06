@@ -13,18 +13,18 @@ para encontrar un plato rápido sin recorrer toda la lista.
 1. RF-01: La vista Platos muestra un campo de texto de búsqueda arriba de las tarjetas.
 2. RF-02: El campo tiene un texto de ayuda en español: "Buscar plato por nombre".
 3. RF-03: Al escribir, las tarjetas se filtran en tiempo real, sin botón de buscar.
-4. RF-04: La búsqueda se hace por nombre del plato.
+4. RF-04: La búsqueda se hace por nombre del plato y coincide si el nombre CONTIENE el texto escrito (no solo si empieza con él).
 5. RF-05: La búsqueda ignora mayúsculas y minúsculas.
-6. RF-06: La búsqueda ignora tildes (por ejemplo, "pique" encuentra "Piqué").
+6. RF-06: La búsqueda ignora tildes (por ejemplo, "pique" encuentra "Piqué"). Se acepta que la "ñ" se trate como "n".
 7. RF-07: Si el campo está vacío, se muestran todos los platos.
-8. RF-08: Si ningún plato coincide, se muestra el mensaje "No se encontraron platos".
+8. RF-08: Si hay platos registrados pero ninguno coincide, se muestra el mensaje "No se encontraron platos".
 9. RF-09: El filtro no modifica ni borra los datos guardados, solo cambia lo que se muestra.
 
 ## Casos límite
 - CL-01: Espacios al inicio o al final del texto se ignoran.
 - CL-02: Texto solo con espacios se trata como campo vacío.
 - CL-03: Texto muy largo no rompe el diseño del campo.
-- CL-04: Caracteres especiales (por ejemplo "*" o "(") no causan errores.
+- CL-04: El texto se compara como texto plano (sin expresiones regulares); caracteres especiales como "*" o "(" no causan errores.
 - CL-05: Si no hay platos registrados, se muestra el estado vacío que ya existía.
 
 ## Criterios de aceptación
