@@ -2,6 +2,44 @@ import { useState, useEffect, useCallback } from 'react';
 import { getInitialData, today, uid } from '../data/seedData';
 
 const STORAGE_KEY = 'rest1';
+const API_BASE = 'http://127.0.0.1:5000';
+
+// Normaliza un texto: minúsculas y sin tildes.
+// "Ají amarillo" → "aji amarillo"   "Maíz mote" → "maiz mote"
+function normalizar(texto) {
+  return String(texto)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+// Convierte un plato de la API al formato interno {id, n, p, r, imagen}.
+// ingList = data.ing del estado, para resolver nombres → ids.
+function apiPlatoToLocal(p, ingList) {
+  const r = [];
+  const ingredientesRaw = Array.isArray(p.ingredientes) ? p.ingredientes : [];
+
+  ingredientesRaw.forEach(([nombre, qty]) => {
+    const nombreNorm = normalizar(nombre);
+    const ing = ingList.find((x) => normalizar(x.n) === nombreNorm);
+    if (ing) {
+      r.push([ing.id, qty]);
+    } else {
+      console.warn(
+        `[Platos API] Ingrediente "${nombre}" no encontrado en data.ing — se omite del plato "${p.nombre}".`
+      );
+    }
+  });
+
+  return {
+    id: String(p.id),
+    n: p.nombre,
+    p: p.precio,
+    r,
+    imagen: p.imagen || '',
+    _fromApi: true
+  };
+}
 
 export function useRestaurantState() {
   const [data, setData] = useState(() => {
@@ -24,7 +62,7 @@ export function useRestaurantState() {
     setToastMessage(null);
   }, []);
 
-  // Persist state changes
+  // Persist state changes (excluye plat que viene de la API)
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -41,6 +79,29 @@ export function useRestaurantState() {
     }, 2800);
     return () => clearTimeout(timer);
   }, [toastMessage]);
+
+  // ── Cargar platos desde la API al montar ───────────────────────────────
+  const fetchPlatos = useCallback(() => {
+    fetch(`${API_BASE}/platos`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos && Array.isArray(json.datos)) {
+          // Usamos setData con función para leer el ing más reciente
+          setData((prev) => {
+            const platosApi = json.datos.map((p) => apiPlatoToLocal(p, prev.ing));
+            return { ...prev, plat: platosApi };
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('No se pudo conectar con la API de platos:', err.message);
+        // Si la API no responde, se mantienen los datos de localStorage/seed
+      });
+  }, []);
+
+  useEffect(() => {
+    fetchPlatos();
+  }, [fetchPlatos]);
 
   const getIngredient = useCallback(
     (id) => data.ing.find((x) => x.id === id),
@@ -119,22 +180,44 @@ export function useRestaurantState() {
     [showToast]
   );
 
-  // 3. Add Dish
+  // 3. Add Dish — llama al API y recarga lista
   const addDish = useCallback(
     ({ name, price, recipe }) => {
-      const newDish = {
-        id: uid(),
-        n: name.trim(),
-        p: Number(price) || 0,
-        r: recipe // array of [ingId, qty]
+      // recipe es [[ingId, qty], ...] con IDs frontend.
+      // Para el backend convertimos a [[nombreIng, qty]] usando los ingredientes del estado.
+      const ingredientesParaApi = recipe.map(([ingId, qty]) => {
+        const ing = data.ing.find((x) => x.id === ingId);
+        return [ing ? ing.n : ingId, qty];
+      });
+
+      const payload = {
+        nombre: name.trim(),
+        precio: Number(price) || 0,
+        idCategoria: 1,          // "Platos fuertes" por defecto (id 1 tras seed)
+        imagen: '',
+        ingredientes: ingredientesParaApi
       };
-      setData((prev) => ({
-        ...prev,
-        plat: [...prev.plat, newDish]
-      }));
-      showToast(`Plato "${newDish.n}" creado`);
+
+      fetch(`${API_BASE}/platos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.datos) {
+            showToast(`Plato "${json.datos.nombre}" creado`);
+            fetchPlatos();   // recarga la lista actualizada
+          } else {
+            showToast(json.error || 'Error al crear el plato');
+          }
+        })
+        .catch((err) => {
+          console.error('Error al crear plato en API:', err);
+          showToast('No se pudo conectar con el servidor');
+        });
     },
-    [showToast]
+    [data.ing, fetchPlatos, showToast]
   );
 
   // 4. Add Supplier
@@ -229,16 +312,33 @@ export function useRestaurantState() {
     [showToast]
   );
 
-  // 7. Delete Item
+  // 7. Delete Item — para 'plat' llama al API; para el resto usa localStorage
   const deleteItem = useCallback(
     (collectionKey, id) => {
-      setData((prev) => ({
-        ...prev,
-        [collectionKey]: (prev[collectionKey] || []).filter((item) => item.id !== id)
-      }));
-      showToast('Registro eliminado');
+      if (collectionKey === 'plat') {
+        fetch(`${API_BASE}/platos/${id}`, { method: 'DELETE' })
+          .then((res) => res.json())
+          .then((json) => {
+            if (json.error) {
+              showToast(json.error);
+            } else {
+              showToast('Plato eliminado');
+              fetchPlatos();   // recarga la lista
+            }
+          })
+          .catch((err) => {
+            console.error('Error al eliminar plato en API:', err);
+            showToast('No se pudo conectar con el servidor');
+          });
+      } else {
+        setData((prev) => ({
+          ...prev,
+          [collectionKey]: (prev[collectionKey] || []).filter((item) => item.id !== id)
+        }));
+        showToast('Registro eliminado');
+      }
     },
-    [showToast]
+    [fetchPlatos, showToast]
   );
 
   // 8. Process Order (Sales POS)
@@ -342,7 +442,9 @@ export function useRestaurantState() {
     const seed = getInitialData();
     setData(seed);
     showToast('Datos de ejemplo restablecidos');
-  }, [showToast]);
+    // Recarga los platos de la API tras resetear
+    fetchPlatos();
+  }, [showToast, fetchPlatos]);
 
   return {
     data,
@@ -360,6 +462,7 @@ export function useRestaurantState() {
     addFinanceRecord,
     deleteItem,
     recordOrder,
-    resetToSeed
+    resetToSeed,
+    fetchPlatos
   };
 }

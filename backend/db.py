@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS Plato (
     nombre TEXT NOT NULL,
     precio REAL NOT NULL,
     idCategoria INTEGER NOT NULL,
+    imagen TEXT NOT NULL DEFAULT '',
+    ingredientes TEXT NOT NULL DEFAULT '[]',
     FOREIGN KEY (idCategoria) REFERENCES Categoria(id) ON DELETE RESTRICT
 );
 

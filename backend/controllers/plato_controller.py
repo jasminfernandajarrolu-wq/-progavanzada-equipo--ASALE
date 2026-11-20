@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from flask import Blueprint, request
 from backend.models.plato_model import PlatoModel
@@ -5,6 +6,7 @@ from backend.models.categoria_model import CategoriaModel
 from backend.views.response_view import success_response, error_response
 
 plato_bp = Blueprint("platos", __name__, url_prefix="/platos")
+
 
 def _validar_payload_plato(data):
     if not data or not isinstance(data, dict):
@@ -23,16 +25,38 @@ def _validar_payload_plato(data):
     if id_categoria is None or not isinstance(id_categoria, int) or id_categoria <= 0:
         return None, "El campo 'idCategoria' es obligatorio y debe ser un entero positivo"
 
+    # Campos opcionales — None significa "no enviado" (preservar valor actual en update)
+    imagen = data.get("imagen", None)
+    if imagen is not None and not isinstance(imagen, str):
+        imagen = ""
+
+    ingredientes_raw = data.get("ingredientes", None)
+    if ingredientes_raw is None:
+        ingredientes = None   # señal de "no enviado"
+    elif isinstance(ingredientes_raw, str):
+        try:
+            ingredientes = json.loads(ingredientes_raw)
+        except json.JSONDecodeError:
+            ingredientes = []
+    elif isinstance(ingredientes_raw, list):
+        ingredientes = ingredientes_raw
+    else:
+        ingredientes = []
+
     return {
         "nombre": nombre.strip(),
         "precio": float(precio),
-        "idCategoria": int(id_categoria)
+        "idCategoria": int(id_categoria),
+        "imagen": imagen,           # None = no enviado
+        "ingredientes": ingredientes  # None = no enviado
     }, None
+
 
 @plato_bp.route("", methods=["GET"])
 def get_platos():
     platos = PlatoModel.get_all()
     return success_response(data=platos, status_code=200)
+
 
 @plato_bp.route("/<int:plato_id>", methods=["GET"])
 def get_plato(plato_id):
@@ -41,13 +65,13 @@ def get_plato(plato_id):
         return error_response(message=f"Plato con id {plato_id} no encontrado", status_code=404)
     return success_response(data=plato, status_code=200)
 
+
 @plato_bp.route("", methods=["POST"])
 def create_plato():
     validados, err = _validar_payload_plato(request.get_json(silent=True))
     if err:
         return error_response(message=err, status_code=400)
 
-    # Validar que la categoría exista
     categoria = CategoriaModel.get_by_id(validados["idCategoria"])
     if not categoria:
         return error_response(message=f"La categoría con id {validados['idCategoria']} no existe", status_code=404)
@@ -56,13 +80,16 @@ def create_plato():
         nuevo_plato = PlatoModel.create(
             nombre=validados["nombre"],
             precio=validados["precio"],
-            id_categoria=validados["idCategoria"]
+            id_categoria=validados["idCategoria"],
+            imagen=validados["imagen"] or "",
+            ingredientes=validados["ingredientes"] or []
         )
         return success_response(data=nuevo_plato, message="Plato creado exitosamente", status_code=201)
     except sqlite3.IntegrityError:
         return error_response(message="Conflicto de integridad al asociar la categoría del plato", status_code=409)
     except Exception as e:
         return error_response(message=f"Error inesperado al crear el plato: {str(e)}", status_code=500)
+
 
 @plato_bp.route("/<int:plato_id>", methods=["PUT"])
 def update_plato(plato_id):
@@ -83,13 +110,16 @@ def update_plato(plato_id):
             plato_id=plato_id,
             nombre=validados["nombre"],
             precio=validados["precio"],
-            id_categoria=validados["idCategoria"]
+            id_categoria=validados["idCategoria"],
+            imagen=validados["imagen"],
+            ingredientes=validados["ingredientes"]
         )
         return success_response(data=plato_actualizado, message="Plato actualizado exitosamente", status_code=200)
     except sqlite3.IntegrityError:
         return error_response(message="Conflicto de integridad al asociar la categoría del plato", status_code=409)
     except Exception as e:
         return error_response(message=f"Error inesperado al actualizar el plato: {str(e)}", status_code=500)
+
 
 @plato_bp.route("/<int:plato_id>", methods=["DELETE"])
 def delete_plato(plato_id):

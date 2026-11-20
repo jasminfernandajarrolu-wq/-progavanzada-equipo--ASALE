@@ -11,12 +11,13 @@ backend/
 ├── app.py                      # Punto de entrada, configuración de Flask y CORS
 ├── config.py                   # Configuración del entorno y ruta de la base de datos
 ├── db.py                       # Conexión sqlite3 con claves foráneas activas (PRAGMA foreign_keys = ON)
+├── seed.py                     # Script idempotente para cargar los 5 platos iniciales
 ├── requirements.txt            # Dependencias del proyecto (Flask, Flask-Cors)
 ├── README_API.md               # Esta documentación
 ├── models/                     # Capa de Modelo (Acceso a datos con SQL puro)
 │   ├── usuario_model.py        # Entidad Usuario con roles (administrador, mesero, cajero)
 │   ├── categoria_model.py      # Entidad Categoria
-│   ├── plato_model.py          # Entidad Plato (con FK a Categoria)
+│   ├── plato_model.py          # Entidad Plato (con FK a Categoria, imagen e ingredientes)
 │   └── pedido_model.py         # Entidad Pedido (con FKs a Usuario y Plato, más cantidad)
 ├── views/                      # Capa de Vista (Estandarización de respuestas JSON)
 │   └── response_view.py
@@ -33,7 +34,8 @@ backend/
     ├── test_categorias.py
     ├── test_platos.py
     ├── test_pedidos.py
-    └── test_reportes.py
+    ├── test_reportes.py
+    └── test_seed.py
 ```
 
 ---
@@ -42,8 +44,43 @@ backend/
 
 - **Usuario:** `id` (PK), `nombre`, `correo` (UNIQUE), `rol` (`'administrador'`, `'mesero'`, `'cajero'`).
 - **Categoria:** `id` (PK), `nombre`.
-- **Plato:** `id` (PK), `nombre`, `precio`, `idCategoria` (FK a Categoria, ON DELETE RESTRICT).
+- **Plato:** `id` (PK), `nombre`, `precio`, `idCategoria` (FK a Categoria, ON DELETE RESTRICT), `imagen` (nombre de archivo `.jpg`), `ingredientes` (JSON array `[["nombre", cantidad_kg], ...]`).
 - **Pedido:** `id` (PK), `idUsuario` (FK a Usuario, ON DELETE RESTRICT), `idPlato` (FK a Plato, ON DELETE RESTRICT), `cantidad` (INTEGER > 0).
+
+---
+
+## 🌱 Cargar Datos Iniciales (Seed)
+
+El script `backend/seed.py` carga los 5 platos bolivianos de la carta con sus categorías, imagen e ingredientes. Es **idempotente**: si se ejecuta dos veces no duplica datos.
+
+```powershell
+# Desde la raíz del repositorio:
+python -m backend.seed
+```
+
+Salida esperada (primera vez):
+```
+=== Seed: Restaurante Sabores Bolivianos ===
+  [+] Categoría creada: Platos fuertes
+  [+] Categoría creada: Sopas
+  [+] Plato creado: Pique macho (Bs 55.00)
+  [+] Plato creado: Sopa de maní (Bs 30.00)
+  ...
+Categorías creadas : 2
+Platos creados     : 5
+Platos omitidos    : 0
+===========================================
+```
+
+Platos que se cargan:
+
+| Nombre | Precio | Categoría | Imagen |
+|---|---|---|---|
+| Pique macho | Bs 55.00 | Platos fuertes | pique-macho.jpg |
+| Sopa de maní | Bs 30.00 | Sopas | sopa-de-mani.jpg |
+| Silpancho | Bs 35.00 | Platos fuertes | silpancho.jpg |
+| Fricasé | Bs 40.00 | Platos fuertes | fricase.jpg |
+| Charquekan | Bs 50.00 | Platos fuertes | charquekan.jpg |
 
 ---
 
