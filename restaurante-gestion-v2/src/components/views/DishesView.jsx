@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bs } from '../../data/seedData';
 import { Plus, Trash2, Eye, Search } from 'lucide-react';
 import { filterDishes } from '../../utils/dishSearch';
 import { Modal } from '../Modal';
+
+const API_BASE = 'http://127.0.0.1:5000';
 
 // Convierte "Pollo al maní" -> "pollo-al-mani"
 function toSlug(text) {
@@ -48,17 +50,144 @@ function DishPhoto({ name }) {
   );
 }
 
+// ── Consulta: Platos por categoría ───────────────────────────────────────
+// refreshKey cambia cuando se agrega o borra un plato, para volver a consultar.
+function PlatosPorCategoria({ refreshKey }) {
+  const [platos, setPlatos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [error, setError] = useState(null);
+  const [selected, setSelected] = useState('todas');
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch(`${API_BASE}/platos`).then((r) => r.json()),
+      fetch(`${API_BASE}/categorias`).then((r) => r.json())
+    ])
+      .then(([pl, ca]) => {
+        if (cancelled) return;
+        setPlatos(Array.isArray(pl.datos) ? pl.datos : []);
+        setCategorias(Array.isArray(ca.datos) ? ca.datos : []);
+        setError(null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError('No se pudo conectar con el servidor backend (http://127.0.0.1:5000)');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+
+  const grupos = categorias.map((c) => ({
+    categoria: c,
+    platos: platos.filter((p) => Number(p.idCategoria) === Number(c.id))
+  }));
+  const visibles =
+    selected === 'todas' ? grupos : grupos.filter((g) => String(g.categoria.id) === selected);
+
+  return (
+    <div className="content-box" style={{ marginTop: '24px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '12px',
+          flexWrap: 'wrap'
+        }}
+      >
+        <h3 style={{ fontSize: '18px' }}>Platos por categoría</h3>
+        <select
+          className="form-input"
+          style={{ maxWidth: '260px' }}
+          value={selected}
+          onChange={(e) => setSelected(e.target.value)}
+          aria-label="Filtrar por categoría"
+        >
+          <option value="todas">Todas las categorías</option>
+          {categorias.map((c) => (
+            <option key={c.id} value={String(c.id)}>
+              {c.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {error && (
+        <p className="text-mut" style={{ color: '#e5484d', marginBottom: '8px' }}>
+          {error}
+        </p>
+      )}
+
+      {visibles.map((g) => (
+        <div key={g.categoria.id} style={{ marginBottom: '16px' }}>
+          <h4 style={{ fontSize: '15px', marginBottom: '6px' }}>
+            {g.categoria.nombre}{' '}
+            <span className="text-mut" style={{ fontWeight: 400 }}>
+              ({g.platos.length} {g.platos.length === 1 ? 'plato' : 'platos'})
+            </span>
+          </h4>
+          {g.platos.length > 0 ? (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Plato</th>
+                    <th>Precio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {g.platos.map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.nombre}</td>
+                      <td className="text-in">{Bs(Number(p.precio) || 0)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-mut" style={{ fontSize: '13px' }}>
+              Esta categoría no tiene platos.
+            </p>
+          )}
+        </div>
+      ))}
+
+      {!error && categorias.length === 0 && (
+        <p className="text-mut">No hay categorías para mostrar.</p>
+      )}
+    </div>
+  );
+}
+
 export function DishesView({ data, onAddDish, onDeleteItem, getIngredient, readOnly = false }) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [search, setSearch] = useState('');
   const filtered = filterDishes(data.plat, search);
   const [dishName, setDishName] = useState('');
   const [dishPrice, setDishPrice] = useState('');
+  const [dishCat, setDishCat] = useState('');
+  const [categorias, setCategorias] = useState([]);
   const [recipes, setRecipes] = useState([
     { ingId: '', qty: '' },
     { ingId: '', qty: '' },
     { ingId: '', qty: '' }
   ]);
+
+  // Categorías de la API, para elegir la categoría al crear un plato
+  useEffect(() => {
+    fetch(`${API_BASE}/categorias`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (Array.isArray(json.datos)) setCategorias(json.datos);
+      })
+      .catch(() => {
+        // Sin backend: el modal funciona sin el selector de categoría
+      });
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -69,14 +198,22 @@ export function DishesView({ data, onAddDish, onDeleteItem, getIngredient, readO
       .filter((r) => r.ingId && Number(r.qty) > 0)
       .map((r) => [r.ingId, Number(r.qty)]);
 
+    const idCategoria = dishCat
+      ? Number(dishCat)
+      : categorias[0]
+        ? Number(categorias[0].id)
+        : 1;
+
     onAddDish({
       name: dishName,
       price: Number(dishPrice),
-      recipe: validRecipe
+      recipe: validRecipe,
+      idCategoria
     });
 
     setDishName('');
     setDishPrice('');
+    setDishCat('');
     setRecipes([
       { ingId: '', qty: '' },
       { ingId: '', qty: '' },
@@ -200,6 +337,8 @@ export function DishesView({ data, onAddDish, onDeleteItem, getIngredient, readO
         </div>
       )}
 
+      <PlatosPorCategoria refreshKey={data.plat.length} />
+
       {/* Modal: Nuevo Plato (Solo si NO es solo lectura) */}
       {!readOnly && (
         <Modal isOpen={isAddOpen} title="Nuevo Plato del Menú" onClose={() => setIsAddOpen(false)}>
@@ -228,6 +367,23 @@ export function DishesView({ data, onAddDish, onDeleteItem, getIngredient, readO
                 placeholder="Ej: 45.00"
               />
             </label>
+
+            {categorias.length > 0 && (
+              <label className="form-label">
+                Categoría
+                <select
+                  className="form-input"
+                  value={dishCat}
+                  onChange={(e) => setDishCat(e.target.value)}
+                >
+                  {categorias.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <div style={{ marginTop: '16px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)' }}>

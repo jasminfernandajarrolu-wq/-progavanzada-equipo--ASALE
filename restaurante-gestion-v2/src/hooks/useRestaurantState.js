@@ -72,6 +72,8 @@ export function useRestaurantState() {
   const [categoriasError, setCategoriasError] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [usuariosError, setUsuariosError] = useState(null);
+  const [pedidosApi, setPedidosApi] = useState([]);
+  const [pedidosApiError, setPedidosApiError] = useState(null);
 
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
@@ -326,6 +328,98 @@ export function useRestaurantState() {
       });
   }, [fetchUsuarios, showToast]);
 
+  // ── Cargar pedidos desde la API ───────────────────────────────────────
+  const fetchPedidosApi = useCallback(() => {
+    return fetch(`${API_BASE}/pedidos`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos && Array.isArray(json.datos)) {
+          setPedidosApi(json.datos);
+          setPedidosApiError(null);
+          return json.datos;
+        } else {
+          setPedidosApiError(json.error || 'Error al obtener pedidos');
+        }
+      })
+      .catch((err) => {
+        console.warn('API de pedidos no disponible:', err.message);
+        setPedidosApiError('No se pudo conectar con el servidor backend (http://127.0.0.1:5000)');
+      });
+  }, []);
+
+  const addPedidoApi = useCallback((pedidoData) => {
+    return fetch(`${API_BASE}/pedidos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idUsuario: Number(pedidoData.idUsuario),
+        idPlato: Number(pedidoData.idPlato),
+        cantidad: Number(pedidoData.cantidad) || 1
+      })
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos) {
+          showToast('Pedido registrado en la base de datos');
+          fetchPedidosApi();
+          return { success: true, data: json.datos };
+        } else {
+          showToast(json.error || 'Error al registrar pedido');
+          return { success: false, error: json.error };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchPedidosApi, showToast]);
+
+  const updatePedidoApi = useCallback((id, pedidoData) => {
+    return fetch(`${API_BASE}/pedidos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idUsuario: Number(pedidoData.idUsuario),
+        idPlato: Number(pedidoData.idPlato),
+        cantidad: Number(pedidoData.cantidad) || 1
+      })
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos) {
+          showToast('Pedido actualizado en la base de datos');
+          fetchPedidosApi();
+          return { success: true, data: json.datos };
+        } else {
+          showToast(json.error || 'Error al actualizar pedido');
+          return { success: false, error: json.error };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchPedidosApi, showToast]);
+
+  const deletePedidoApi = useCallback((id) => {
+    return fetch(`${API_BASE}/pedidos/${id}`, { method: 'DELETE' })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.error) {
+          showToast(json.error);
+          return { success: false, error: json.error };
+        } else {
+          showToast('Pedido eliminado de la base de datos');
+          fetchPedidosApi();
+          return { success: true };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchPedidosApi, showToast]);
+
   useEffect(() => {
     // Cargar primero ingredientes y luego platos para resolución inmediata de IDs
     fetchIngredientes().finally(() => {
@@ -333,7 +427,8 @@ export function useRestaurantState() {
     });
     fetchCategorias();
     fetchUsuarios();
-  }, [fetchIngredientes, fetchPlatos, fetchCategorias, fetchUsuarios]);
+    fetchPedidosApi();
+  }, [fetchIngredientes, fetchPlatos, fetchCategorias, fetchUsuarios, fetchPedidosApi]);
 
   const getIngredient = useCallback(
     (id) => data.ing.find((x) => x.id === id),
@@ -480,7 +575,7 @@ export function useRestaurantState() {
 
   // 3. Add Dish — llama al API y recarga lista
   const addDish = useCallback(
-    ({ name, price, recipe }) => {
+    ({ name, price, recipe, idCategoria }) => {
       // recipe es [[ingId, qty], ...] con IDs frontend.
       // Para el backend convertimos a [[nombreIng, qty]] usando los ingredientes del estado.
       const ingredientesParaApi = recipe.map(([ingId, qty]) => {
