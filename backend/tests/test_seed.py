@@ -3,7 +3,7 @@ import os
 import tempfile
 from backend.db import init_db, get_db_connection
 from backend.config import Config
-from backend.seed import seed, PLATOS, CATEGORIAS
+from backend.seed import seed, PLATOS, CATEGORIAS, INGREDIENTES
 
 
 class TestSeed(unittest.TestCase):
@@ -26,13 +26,16 @@ class TestSeed(unittest.TestCase):
         finally:
             conn.close()
 
-    def test_seed_crea_categorias_y_platos(self):
+    def test_seed_crea_categorias_ingredientes_y_platos(self):
         stats = seed(self.db_path)
         self.assertEqual(stats["categorias_creadas"], len(CATEGORIAS))
+        self.assertEqual(stats["ingredientes_creados"], len(INGREDIENTES))
+        self.assertEqual(stats["ingredientes_omitidos"], 0)
         self.assertEqual(stats["platos_creados"], len(PLATOS))
         self.assertEqual(stats["platos_omitidos"], 0)
-        self.assertEqual(self._count("Plato"), len(PLATOS))
         self.assertEqual(self._count("Categoria"), len(CATEGORIAS))
+        self.assertEqual(self._count("Ingrediente"), len(INGREDIENTES))
+        self.assertEqual(self._count("Plato"), len(PLATOS))
 
     def test_seed_idempotente_no_duplica(self):
         # Primera ejecución
@@ -40,11 +43,33 @@ class TestSeed(unittest.TestCase):
         # Segunda ejecución
         stats2 = seed(self.db_path)
         self.assertEqual(stats2["categorias_creadas"], 0)
+        self.assertEqual(stats2["ingredientes_creados"], 0)
+        self.assertEqual(stats2["ingredientes_omitidos"], len(INGREDIENTES))
         self.assertEqual(stats2["platos_creados"], 0)
         self.assertEqual(stats2["platos_omitidos"], len(PLATOS))
         # Conteo sigue igual
-        self.assertEqual(self._count("Plato"), len(PLATOS))
         self.assertEqual(self._count("Categoria"), len(CATEGORIAS))
+        self.assertEqual(self._count("Ingrediente"), len(INGREDIENTES))
+        self.assertEqual(self._count("Plato"), len(PLATOS))
+
+    def test_seed_ingredientes_datos_correctos(self):
+        seed(self.db_path)
+        conn = get_db_connection(self.db_path)
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT nombre, unidad, stock, stockMinimo, precioUnitario FROM Ingrediente ORDER BY id;")
+            rows = {r["nombre"]: dict(r) for r in cur.fetchall()}
+        finally:
+            conn.close()
+
+        self.assertEqual(len(rows), len(INGREDIENTES))
+        for expected in INGREDIENTES:
+            self.assertIn(expected["nombre"], rows)
+            actual = rows[expected["nombre"]]
+            self.assertEqual(actual["unidad"], expected["unidad"])
+            self.assertEqual(actual["stock"], expected["stock"])
+            self.assertEqual(actual["stockMinimo"], expected["stockMinimo"])
+            self.assertEqual(actual["precioUnitario"], expected["precioUnitario"])
 
     def test_seed_platos_tienen_imagen_e_ingredientes(self):
         seed(self.db_path)
@@ -83,10 +108,10 @@ class TestSeed(unittest.TestCase):
             self.assertEqual(rows[plato["nombre"]], plato["categoria"])
 
     def test_seed_crea_db_si_no_existe(self):
-        # Usar un archivo que no existe aún
         nuevo_path = self.db_path + "_nuevo.sqlite3"
         try:
             stats = seed(nuevo_path)
+            self.assertEqual(stats["ingredientes_creados"], len(INGREDIENTES))
             self.assertEqual(stats["platos_creados"], len(PLATOS))
         finally:
             if os.path.exists(nuevo_path):

@@ -1,5 +1,5 @@
 """
-seed.py — Carga los platos iniciales del restaurante en la base de datos.
+seed.py — Carga los ingredientes y platos iniciales del restaurante en la base de datos.
 Idempotente: si se ejecuta dos veces no duplica registros.
 
 Uso (desde la raíz del proyecto):
@@ -23,6 +23,17 @@ from backend.config import Config
 # Datos de seed (extraídos de restaurante-gestion-v2/src/data/seedData.js)
 # ---------------------------------------------------------------------------
 CATEGORIAS = ["Platos fuertes", "Sopas"]
+
+INGREDIENTES = [
+    {"nombre": "Charque", "unidad": "kg", "stock": 8.0, "stockMinimo": 3.0, "precioUnitario": 70.0},
+    {"nombre": "Papa", "unidad": "kg", "stock": 40.0, "stockMinimo": 15.0, "precioUnitario": 5.0},
+    {"nombre": "Maíz mote", "unidad": "kg", "stock": 12.0, "stockMinimo": 5.0, "precioUnitario": 12.0},
+    {"nombre": "Carne de res", "unidad": "kg", "stock": 20.0, "stockMinimo": 8.0, "precioUnitario": 55.0},
+    {"nombre": "Pollo", "unidad": "kg", "stock": 15.0, "stockMinimo": 6.0, "precioUnitario": 22.0},
+    {"nombre": "Arroz", "unidad": "kg", "stock": 25.0, "stockMinimo": 10.0, "precioUnitario": 9.0},
+    {"nombre": "Ají amarillo", "unidad": "kg", "stock": 2.0, "stockMinimo": 2.0, "precioUnitario": 30.0},
+    {"nombre": "Maní", "unidad": "kg", "stock": 6.0, "stockMinimo": 3.0, "precioUnitario": 25.0},
+]
 
 PLATOS = [
     {
@@ -72,7 +83,13 @@ def seed(db_path=None):
     init_db(db_path)
 
     conn = get_db_connection(db_path)
-    stats = {"categorias_creadas": 0, "platos_creados": 0, "platos_omitidos": 0}
+    stats = {
+        "categorias_creadas": 0,
+        "ingredientes_creados": 0,
+        "ingredientes_omitidos": 0,
+        "platos_creados": 0,
+        "platos_omitidos": 0
+    }
 
     try:
         cursor = conn.cursor()
@@ -92,7 +109,25 @@ def seed(db_path=None):
 
         conn.commit()
 
-        # 2. Insertar platos si no existen (verificar por nombre)
+        # 2. Insertar ingredientes si no existen (verificar por nombre ignorando mayúsculas)
+        for ing in INGREDIENTES:
+            cursor.execute("SELECT id FROM Ingrediente WHERE LOWER(nombre) = LOWER(?);", (ing["nombre"],))
+            if cursor.fetchone():
+                stats["ingredientes_omitidos"] += 1
+                print(f"  [·] Ingrediente ya existe (omitido): {ing['nombre']}")
+                continue
+
+            cursor.execute(
+                """INSERT INTO Ingrediente (nombre, unidad, stock, stockMinimo, precioUnitario)
+                   VALUES (?, ?, ?, ?, ?);""",
+                (ing["nombre"], ing["unidad"], ing["stock"], ing["stockMinimo"], ing["precioUnitario"])
+            )
+            stats["ingredientes_creados"] += 1
+            print(f"  [+] Ingrediente creado: {ing['nombre']} ({ing['stock']} {ing['unidad']})")
+
+        conn.commit()
+
+        # 3. Insertar platos si no existen (verificar por nombre)
         for plato in PLATOS:
             cursor.execute("SELECT id FROM Plato WHERE nombre = ?;", (plato["nombre"],))
             if cursor.fetchone():
@@ -122,7 +157,9 @@ if __name__ == "__main__":
     print("=== Seed: Restaurante Sabores Bolivianos ===")
     result = seed()
     print()
-    print(f"Categorías creadas : {result['categorias_creadas']}")
-    print(f"Platos creados     : {result['platos_creados']}")
-    print(f"Platos omitidos    : {result['platos_omitidos']}")
+    print(f"Categorías creadas   : {result['categorias_creadas']}")
+    print(f"Ingredientes creados : {result['ingredientes_creados']}")
+    print(f"Ingredientes omitidos: {result['ingredientes_omitidos']}")
+    print(f"Platos creados       : {result['platos_creados']}")
+    print(f"Platos omitidos      : {result['platos_omitidos']}")
     print("===========================================")

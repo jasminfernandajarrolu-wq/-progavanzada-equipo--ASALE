@@ -9,11 +9,16 @@
 - Login.
 - README actualizado.
 - Comandos personalizados SDD creados (/especificar, /clarificar, /planificar, /tareas, /implementar, /validar) y sincronizados en .agents/skills.
-- **Backend Flask MVC** en `backend/` con SQLite: entidades Usuario (con rol), Categoria, Plato, Pedido. 60 tests pasan.
-- **API conectada al frontend**: `useRestaurantState.js` carga platos desde `GET /platos` al montar; `addDish` llama `POST /platos`; `deleteItem('plat',id)` llama `DELETE /platos/<id>`.
-- **seed.py** idempotente carga los 5 platos bolivianos con imagen e ingredientes (ejecutar con `python -m backend.seed`).
+- **Backend Flask MVC** en `backend/` con SQLite: entidades Usuario (con rol), Categoria, Plato, Ingrediente, Pedido. 75 tests pasan con pytest y unittest.
+- **API conectada al frontend**:
+  - `Platos`: `GET /platos`, `POST /platos`, `DELETE /platos/<id>`.
+  - `Ingredientes`: `GET /ingredientes`, `POST /ingredientes`, `PUT /ingredientes/<id>`, `DELETE /ingredientes/<id>`.
+  - Fallback transparente a `localStorage` si el backend está apagado.
+  - Validación antes de borrar: si un plato utiliza el ingrediente en su receta, la eliminación se bloquea y avisa al usuario.
+- **seed.py** idempotente carga las 2 categorías, los 8 ingredientes iniciales y los 5 platos típicos bolivianos con imagen e ingredientes (ejecutar con `python -m backend.seed`).
 - **Plato** tiene campos `imagen` (nombre .jpg) e `ingredientes` (JSON `[["nombre", qty_kg], ...]`).
-- **Fix de recetas en tarjetas**: `apiPlatoToLocal` convierte nombres de ingredientes de la API a IDs de `data.ing` usando comparación sin tildes ni mayúsculas (`normalizar()`). Ingredientes no encontrados se omiten sin romper la pantalla y se avisan en consola.
+- **Ingrediente** tiene `id`, `nombre` (UNIQUE), `unidad`, `stock`, `stockMinimo`, `precioUnitario`.
+- **Resolución de recetas en tarjetas**: `apiPlatoToLocal` convierte nombres de ingredientes de la API a IDs de `data.ing` usando comparación sin tildes ni mayúsculas (`normalizar()`).
 
 ## Aprendizajes
 - El agente propone, yo reviso y dirijo.

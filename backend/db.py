@@ -33,6 +33,15 @@ CREATE TABLE IF NOT EXISTS Pedido (
     FOREIGN KEY (idUsuario) REFERENCES Usuario(id) ON DELETE RESTRICT,
     FOREIGN KEY (idPlato) REFERENCES Plato(id) ON DELETE RESTRICT
 );
+
+CREATE TABLE IF NOT EXISTS Ingrediente (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL UNIQUE,
+    unidad TEXT NOT NULL,
+    stock REAL NOT NULL DEFAULT 0,
+    stockMinimo REAL NOT NULL DEFAULT 0,
+    precioUnitario REAL NOT NULL DEFAULT 0
+);
 """
 
 def get_db_connection(db_path=None):

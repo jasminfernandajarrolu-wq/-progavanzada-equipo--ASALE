@@ -7,10 +7,24 @@ const API_BASE = 'http://127.0.0.1:5000';
 // Normaliza un texto: minúsculas y sin tildes.
 // "Ají amarillo" → "aji amarillo"   "Maíz mote" → "maiz mote"
 function normalizar(texto) {
-  return String(texto)
+  return String(texto || '')
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+// Convierte un ingrediente de la API al formato interno {id, n, u, s, m, c}
+function apiIngredienteToLocal(i) {
+  return {
+    id: String(i.id),
+    n: i.nombre,
+    u: i.unidad,
+    s: Number(i.stock) || 0,
+    m: Number(i.stockMinimo) || 0,
+    c: Number(i.precioUnitario) || 0,
+    _fromApi: true
+  };
 }
 
 // Convierte un plato de la API al formato interno {id, n, p, r, imagen}.
@@ -21,7 +35,7 @@ function apiPlatoToLocal(p, ingList) {
 
   ingredientesRaw.forEach(([nombre, qty]) => {
     const nombreNorm = normalizar(nombre);
-    const ing = ingList.find((x) => normalizar(x.n) === nombreNorm);
+    const ing = (ingList || []).find((x) => normalizar(x.n) === nombreNorm);
     if (ing) {
       r.push([ing.id, qty]);
     } else {
@@ -37,7 +51,8 @@ function apiPlatoToLocal(p, ingList) {
     p: p.precio,
     r,
     imagen: p.imagen || '',
-    _fromApi: true
+    _fromApi: true,
+    _rawIngredientes: ingredientesRaw
   };
 }
 
@@ -80,13 +95,45 @@ export function useRestaurantState() {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
-  // ── Cargar platos desde la API al montar ───────────────────────────────
-  const fetchPlatos = useCallback(() => {
-    fetch(`${API_BASE}/platos`)
+  // ── Cargar ingredientes desde la API ─────────────────────────────────
+  const fetchIngredientes = useCallback(() => {
+    return fetch(`${API_BASE}/ingredientes`)
       .then((res) => res.json())
       .then((json) => {
         if (json.datos && Array.isArray(json.datos)) {
-          // Usamos setData con función para leer el ing más reciente
+          const ingsApi = json.datos.map(apiIngredienteToLocal);
+          setData((prev) => {
+            // Si ya hay platos cargados desde la API, re-resolver sus recetas con la lista fresca de ingredientes
+            const platActualizados = (prev.plat || []).map((p) => {
+              if (p._fromApi && p._rawIngredientes) {
+                return apiPlatoToLocal(
+                  { id: p.id, nombre: p.n, precio: p.p, imagen: p.imagen, ingredientes: p._rawIngredientes },
+                  ingsApi
+                );
+              }
+              return p;
+            });
+            return {
+              ...prev,
+              ing: ingsApi,
+              plat: platActualizados
+            };
+          });
+          return ingsApi;
+        }
+      })
+      .catch((err) => {
+        console.warn('No se pudo conectar con la API de ingredientes:', err.message);
+        // Si la API no responde, se mantienen los datos locales
+      });
+  }, []);
+
+  // ── Cargar platos desde la API ────────────────────────────────────────
+  const fetchPlatos = useCallback(() => {
+    return fetch(`${API_BASE}/platos`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos && Array.isArray(json.datos)) {
           setData((prev) => {
             const platosApi = json.datos.map((p) => apiPlatoToLocal(p, prev.ing));
             return { ...prev, plat: platosApi };
@@ -100,8 +147,11 @@ export function useRestaurantState() {
   }, []);
 
   useEffect(() => {
-    fetchPlatos();
-  }, [fetchPlatos]);
+    // Cargar primero ingredientes y luego platos para resolución inmediata de IDs
+    fetchIngredientes().finally(() => {
+      fetchPlatos();
+    });
+  }, [fetchIngredientes, fetchPlatos]);
 
   const getIngredient = useCallback(
     (id) => data.ing.find((x) => x.id === id),
@@ -118,24 +168,90 @@ export function useRestaurantState() {
     [data.fin]
   );
 
-  // 1. Add Ingredient
+  // 1. Add Ingredient — llama a la API con fallback a local
   const addIngredient = useCallback(
     (item) => {
-      const newIng = {
-        id: uid(),
-        n: item.n.trim(),
-        u: item.u.trim(),
-        s: Number(item.s) || 0,
-        m: Number(item.m) || 0,
-        c: Number(item.c) || 0
+      const payload = {
+        nombre: (item.n || '').trim(),
+        unidad: (item.u || 'kg').trim(),
+        stock: Number(item.s) || 0,
+        stockMinimo: Number(item.m) || 0,
+        precioUnitario: Number(item.c) || 0
       };
-      setData((prev) => ({
-        ...prev,
-        ing: [...prev.ing, newIng]
-      }));
-      showToast(`Ingrediente "${newIng.n}" agregado`);
+
+      fetch(`${API_BASE}/ingredientes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.datos) {
+            showToast(`Ingrediente "${json.datos.nombre}" agregado`);
+            fetchIngredientes();
+          } else {
+            showToast(json.error || 'Error al agregar ingrediente');
+          }
+        })
+        .catch((err) => {
+          console.warn('API de ingredientes no disponible, guardando en local:', err.message);
+          const newIng = {
+            id: uid(),
+            n: payload.nombre,
+            u: payload.unidad,
+            s: payload.stock,
+            m: payload.stockMinimo,
+            c: payload.precioUnitario
+          };
+          setData((prev) => ({
+            ...prev,
+            ing: [...prev.ing, newIng]
+          }));
+          showToast(`Ingrediente "${newIng.n}" agregado (modo local)`);
+        });
     },
-    [showToast]
+    [fetchIngredientes, showToast]
+  );
+
+  // 1.1 Update Ingredient — para edición / actualización de stock
+  const updateIngredient = useCallback(
+    (id, item) => {
+      const payload = {
+        nombre: (item.n || item.nombre || '').trim(),
+        unidad: (item.u || item.unidad || 'kg').trim(),
+        stock: Number(item.s !== undefined ? item.s : item.stock) || 0,
+        stockMinimo: Number(item.m !== undefined ? item.m : item.stockMinimo) || 0,
+        precioUnitario: Number(item.c !== undefined ? item.c : item.precioUnitario) || 0
+      };
+
+      fetch(`${API_BASE}/ingredientes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.datos) {
+            showToast(`Ingrediente "${json.datos.nombre}" actualizado`);
+            fetchIngredientes();
+          } else {
+            showToast(json.error || 'Error al actualizar ingrediente');
+          }
+        })
+        .catch((err) => {
+          console.warn('API de ingredientes no disponible, actualizando local:', err.message);
+          setData((prev) => ({
+            ...prev,
+            ing: prev.ing.map((x) =>
+              String(x.id) === String(id)
+                ? { ...x, n: payload.nombre, u: payload.unidad, s: payload.stock, m: payload.stockMinimo, c: payload.precioUnitario }
+                : x
+            )
+          }));
+          showToast('Ingrediente actualizado (modo local)');
+        });
+    },
+    [fetchIngredientes, showToast]
   );
 
   // 2. Inventory Movement
@@ -312,7 +428,7 @@ export function useRestaurantState() {
     [showToast]
   );
 
-  // 7. Delete Item — para 'plat' llama al API; para el resto usa localStorage
+  // 7. Delete Item — para 'plat' e 'ing' llama a la API; para el resto usa localStorage
   const deleteItem = useCallback(
     (collectionKey, id) => {
       if (collectionKey === 'plat') {
@@ -330,6 +446,47 @@ export function useRestaurantState() {
             console.error('Error al eliminar plato en API:', err);
             showToast('No se pudo conectar con el servidor');
           });
+      } else if (collectionKey === 'ing') {
+        // Regla: Antes de borrar un ingrediente, avisa si algún plato lo usa
+        const targetIng = data.ing.find((x) => String(x.id) === String(id));
+        const ingNorm = targetIng ? normalizar(targetIng.n) : '';
+
+        const platoUsando = data.plat.find((p) => {
+          return (
+            Array.isArray(p.r) &&
+            p.r.some(([iId]) => {
+              if (String(iId) === String(id)) return true;
+              if (targetIng && normalizar(iId) === ingNorm) return true;
+              return false;
+            })
+          );
+        });
+
+        if (platoUsando) {
+          showToast(
+            `No se puede eliminar "${targetIng ? targetIng.n : 'el ingrediente'}": se usa en el plato "${platoUsando.n}"`
+          );
+          return;
+        }
+
+        fetch(`${API_BASE}/ingredientes/${id}`, { method: 'DELETE' })
+          .then((res) => res.json())
+          .then((json) => {
+            if (json.error) {
+              showToast(json.error);
+            } else {
+              showToast('Ingrediente eliminado');
+              fetchIngredientes();
+            }
+          })
+          .catch((err) => {
+            console.warn('API de ingredientes no disponible al eliminar, procediendo local:', err.message);
+            setData((prev) => ({
+              ...prev,
+              ing: (prev.ing || []).filter((item) => String(item.id) !== String(id))
+            }));
+            showToast('Ingrediente eliminado (modo local)');
+          });
       } else {
         setData((prev) => ({
           ...prev,
@@ -338,7 +495,7 @@ export function useRestaurantState() {
         showToast('Registro eliminado');
       }
     },
-    [fetchPlatos, showToast]
+    [data.ing, data.plat, fetchIngredientes, fetchPlatos, showToast]
   );
 
   // 8. Process Order (Sales POS)
@@ -442,9 +599,11 @@ export function useRestaurantState() {
     const seed = getInitialData();
     setData(seed);
     showToast('Datos de ejemplo restablecidos');
-    // Recarga los platos de la API tras resetear
-    fetchPlatos();
-  }, [showToast, fetchPlatos]);
+    // Recarga ingredientes y platos de la API tras resetear
+    fetchIngredientes().finally(() => {
+      fetchPlatos();
+    });
+  }, [showToast, fetchIngredientes, fetchPlatos]);
 
   return {
     data,
@@ -455,6 +614,7 @@ export function useRestaurantState() {
     lowStockItems,
     getFinancialSum,
     addIngredient,
+    updateIngredient,
     recordMovement,
     addDish,
     addSupplier,
@@ -463,6 +623,7 @@ export function useRestaurantState() {
     deleteItem,
     recordOrder,
     resetToSeed,
-    fetchPlatos
+    fetchPlatos,
+    fetchIngredientes
   };
 }

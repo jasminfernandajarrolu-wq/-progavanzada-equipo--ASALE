@@ -18,6 +18,7 @@ backend/
 │   ├── usuario_model.py        # Entidad Usuario con roles (administrador, mesero, cajero)
 │   ├── categoria_model.py      # Entidad Categoria
 │   ├── plato_model.py          # Entidad Plato (con FK a Categoria, imagen e ingredientes)
+│   ├── ingrediente_model.py    # Entidad Ingrediente (stock, costo, unidad)
 │   └── pedido_model.py         # Entidad Pedido (con FKs a Usuario y Plato, más cantidad)
 ├── views/                      # Capa de Vista (Estandarización de respuestas JSON)
 │   └── response_view.py
@@ -25,14 +26,16 @@ backend/
 │   ├── usuario_controller.py   # Rutas y validaciones para /usuarios
 │   ├── categoria_controller.py # Rutas y validaciones para /categorias
 │   ├── plato_controller.py     # Rutas y validaciones para /platos
+│   ├── ingrediente_controller.py # Rutas y validaciones para /ingredientes
 │   ├── pedido_controller.py    # Rutas y validaciones para /pedidos
 │   └── reporte_controller.py   # Rutas para reportes de pedidos y platos
-└── tests/                      # Suite de pruebas automatizadas (unittest)
+└── tests/                      # Suite de pruebas automatizadas (unittest y pytest)
     ├── test_app.py
     ├── test_db.py
     ├── test_usuarios.py
     ├── test_categorias.py
     ├── test_platos.py
+    ├── test_ingredientes.py
     ├── test_pedidos.py
     ├── test_reportes.py
     └── test_seed.py
@@ -45,6 +48,7 @@ backend/
 - **Usuario:** `id` (PK), `nombre`, `correo` (UNIQUE), `rol` (`'administrador'`, `'mesero'`, `'cajero'`).
 - **Categoria:** `id` (PK), `nombre`.
 - **Plato:** `id` (PK), `nombre`, `precio`, `idCategoria` (FK a Categoria, ON DELETE RESTRICT), `imagen` (nombre de archivo `.jpg`), `ingredientes` (JSON array `[["nombre", cantidad_kg], ...]`).
+- **Ingrediente:** `id` (PK), `nombre` (UNIQUE), `unidad`, `stock`, `stockMinimo`, `precioUnitario`.
 - **Pedido:** `id` (PK), `idUsuario` (FK a Usuario, ON DELETE RESTRICT), `idPlato` (FK a Plato, ON DELETE RESTRICT), `cantidad` (INTEGER > 0).
 
 ---

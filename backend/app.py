@@ -9,6 +9,7 @@ from backend.controllers.categoria_controller import categoria_bp
 from backend.controllers.plato_controller import plato_bp
 from backend.controllers.pedido_controller import pedido_bp
 from backend.controllers.reporte_controller import reporte_bp
+from backend.controllers.ingrediente_controller import ingrediente_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -28,6 +29,7 @@ def create_app(config_class=Config):
     app.register_blueprint(plato_bp)
     app.register_blueprint(pedido_bp)
     app.register_blueprint(reporte_bp)
+    app.register_blueprint(ingrediente_bp)
 
     # Ruta raíz informativa
     @app.route("/", methods=["GET"])
@@ -40,6 +42,7 @@ def create_app(config_class=Config):
                     "usuarios": "/usuarios",
                     "categorias": "/categorias",
                     "platos": "/platos",
+                    "ingredientes": "/ingredientes",
                     "pedidos": "/pedidos",
                     "reporte_pedidos": "/reportes/pedidos-por-usuario",
                     "reporte_platos": "/reportes/platos-por-categoria"
