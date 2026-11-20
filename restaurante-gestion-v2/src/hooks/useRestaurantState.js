@@ -68,6 +68,10 @@ export function useRestaurantState() {
   });
 
   const [toastMessage, setToastMessage] = useState(null);
+  const [categorias, setCategorias] = useState([]);
+  const [categoriasError, setCategoriasError] = useState(null);
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuariosError, setUsuariosError] = useState(null);
 
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
@@ -146,12 +150,190 @@ export function useRestaurantState() {
       });
   }, []);
 
+  // ── Cargar categorías desde la API ───────────────────────────────────
+  const fetchCategorias = useCallback(() => {
+    return fetch(`${API_BASE}/categorias`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos && Array.isArray(json.datos)) {
+          setCategorias(json.datos);
+          setCategoriasError(null);
+          return json.datos;
+        } else {
+          setCategoriasError(json.error || 'Error al obtener categorías');
+        }
+      })
+      .catch((err) => {
+        console.warn('API de categorías no disponible:', err.message);
+        setCategoriasError('No se pudo conectar con el servidor backend (http://127.0.0.1:5000)');
+      });
+  }, []);
+
+  const addCategoria = useCallback((nombre) => {
+    return fetch(`${API_BASE}/categorias`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: (nombre || '').trim() })
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos) {
+          showToast(`Categoría "${json.datos.nombre}" creada`);
+          fetchCategorias();
+          return { success: true, data: json.datos };
+        } else {
+          showToast(json.error || 'Error al crear categoría');
+          return { success: false, error: json.error };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchCategorias, showToast]);
+
+  const updateCategoria = useCallback((id, nombre) => {
+    return fetch(`${API_BASE}/categorias/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: (nombre || '').trim() })
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos) {
+          showToast(`Categoría "${json.datos.nombre}" actualizada`);
+          fetchCategorias();
+          return { success: true, data: json.datos };
+        } else {
+          showToast(json.error || 'Error al actualizar categoría');
+          return { success: false, error: json.error };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchCategorias, showToast]);
+
+  const deleteCategoria = useCallback((id) => {
+    return fetch(`${API_BASE}/categorias/${id}`, { method: 'DELETE' })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.error) {
+          showToast(json.error);
+          return { success: false, error: json.error };
+        } else {
+          showToast('Categoría eliminada');
+          fetchCategorias();
+          return { success: true };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchCategorias, showToast]);
+
+  // ── Cargar usuarios desde la API ──────────────────────────────────────
+  const fetchUsuarios = useCallback(() => {
+    return fetch(`${API_BASE}/usuarios`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos && Array.isArray(json.datos)) {
+          setUsuarios(json.datos);
+          setUsuariosError(null);
+          return json.datos;
+        } else {
+          setUsuariosError(json.error || 'Error al obtener usuarios');
+        }
+      })
+      .catch((err) => {
+        console.warn('API de usuarios no disponible:', err.message);
+        setUsuariosError('No se pudo conectar con el servidor backend (http://127.0.0.1:5000)');
+      });
+  }, []);
+
+  const addUsuario = useCallback((userData) => {
+    return fetch(`${API_BASE}/usuarios`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: (userData.nombre || '').trim(),
+        correo: (userData.correo || '').trim(),
+        rol: (userData.rol || 'mesero').trim()
+      })
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos) {
+          showToast(`Usuario "${json.datos.nombre}" creado`);
+          fetchUsuarios();
+          return { success: true, data: json.datos };
+        } else {
+          showToast(json.error || 'Error al crear usuario');
+          return { success: false, error: json.error };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchUsuarios, showToast]);
+
+  const updateUsuario = useCallback((id, userData) => {
+    return fetch(`${API_BASE}/usuarios/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: (userData.nombre || '').trim(),
+        correo: (userData.correo || '').trim(),
+        rol: (userData.rol || 'mesero').trim()
+      })
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.datos) {
+          showToast(`Usuario "${json.datos.nombre}" actualizado`);
+          fetchUsuarios();
+          return { success: true, data: json.datos };
+        } else {
+          showToast(json.error || 'Error al actualizar usuario');
+          return { success: false, error: json.error };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchUsuarios, showToast]);
+
+  const deleteUsuario = useCallback((id) => {
+    return fetch(`${API_BASE}/usuarios/${id}`, { method: 'DELETE' })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.error) {
+          showToast(json.error);
+          return { success: false, error: json.error };
+        } else {
+          showToast('Usuario eliminado');
+          fetchUsuarios();
+          return { success: true };
+        }
+      })
+      .catch((err) => {
+        showToast('No se pudo conectar con el servidor');
+        return { success: false, error: err.message };
+      });
+  }, [fetchUsuarios, showToast]);
+
   useEffect(() => {
     // Cargar primero ingredientes y luego platos para resolución inmediata de IDs
     fetchIngredientes().finally(() => {
       fetchPlatos();
     });
-  }, [fetchIngredientes, fetchPlatos]);
+    fetchCategorias();
+    fetchUsuarios();
+  }, [fetchIngredientes, fetchPlatos, fetchCategorias, fetchUsuarios]);
 
   const getIngredient = useCallback(
     (id) => data.ing.find((x) => x.id === id),
@@ -487,6 +669,10 @@ export function useRestaurantState() {
             }));
             showToast('Ingrediente eliminado (modo local)');
           });
+      } else if (collectionKey === 'cat') {
+        deleteCategoria(id);
+      } else if (collectionKey === 'usr') {
+        deleteUsuario(id);
       } else {
         setData((prev) => ({
           ...prev,
@@ -495,7 +681,7 @@ export function useRestaurantState() {
         showToast('Registro eliminado');
       }
     },
-    [data.ing, data.plat, fetchIngredientes, fetchPlatos, showToast]
+    [data.ing, data.plat, fetchIngredientes, fetchPlatos, deleteCategoria, deleteUsuario, showToast]
   );
 
   // 8. Process Order (Sales POS)
@@ -599,11 +785,13 @@ export function useRestaurantState() {
     const seed = getInitialData();
     setData(seed);
     showToast('Datos de ejemplo restablecidos');
-    // Recarga ingredientes y platos de la API tras resetear
+    // Recarga todas las entidades de la API tras resetear
     fetchIngredientes().finally(() => {
       fetchPlatos();
     });
-  }, [showToast, fetchIngredientes, fetchPlatos]);
+    fetchCategorias();
+    fetchUsuarios();
+  }, [showToast, fetchIngredientes, fetchPlatos, fetchCategorias, fetchUsuarios]);
 
   return {
     data,
@@ -624,6 +812,18 @@ export function useRestaurantState() {
     recordOrder,
     resetToSeed,
     fetchPlatos,
-    fetchIngredientes
+    fetchIngredientes,
+    categorias,
+    categoriasError,
+    fetchCategorias,
+    addCategoria,
+    updateCategoria,
+    deleteCategoria,
+    usuarios,
+    usuariosError,
+    fetchUsuarios,
+    addUsuario,
+    updateUsuario,
+    deleteUsuario
   };
 }

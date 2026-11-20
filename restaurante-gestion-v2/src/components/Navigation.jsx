@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Boxes,
   CookingPot,
+  Tag,
   Truck,
   ClipboardList,
   ShoppingCart,
@@ -10,19 +11,22 @@ import {
   BarChart3,
   ShieldCheck,
   Utensils,
-  User
+  User,
+  Users
 } from 'lucide-react';
 import { ROLE_PERMISSIONS } from '../data/authData';
 
 export const TABS = [
   { id: 'dash', label: 'Inicio', icon: LayoutDashboard },
-  { id: 'ing', label: 'Ingredientes', icon: Boxes },
   { id: 'plat', label: 'Platos', icon: CookingPot },
+  { id: 'cat', label: 'Categorías', icon: Tag },
+  { id: 'ing', label: 'Ingredientes', icon: Boxes },
   { id: 'prov', label: 'Proveedores', icon: Truck },
   { id: 'ped', label: 'Pedidos', icon: ClipboardList },
   { id: 'comp', label: 'Compras', icon: ShoppingCart },
   { id: 'fin', label: 'Ingresos y egresos', icon: WalletCards },
-  { id: 'rep', label: 'Reportes', icon: BarChart3 }
+  { id: 'rep', label: 'Reportes', icon: BarChart3 },
+  { id: 'usr', label: 'Usuarios', icon: Users }
 ];
 
 export function Navigation({

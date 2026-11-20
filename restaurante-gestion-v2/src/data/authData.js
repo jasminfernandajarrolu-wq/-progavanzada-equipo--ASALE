@@ -7,38 +7,44 @@ export const ROLES = {
 export const ROLE_PERMISSIONS = {
   [ROLES.ADMIN]: {
     label: 'Administrador',
-    description: 'Acceso total a todo: Inicio, Ingredientes, Platos, Proveedores, Pedidos, Compras, Ingresos/Egresos y Reportes completos.',
+    description: 'Acceso total a todo: Inicio, Ingredientes, Platos, Categorías, Usuarios, Proveedores, Pedidos, Compras, Ingresos/Egresos y Reportes completos.',
     badgeClass: 'role-badge-admin',
     color: '#D9532F',
     iconName: 'ShieldCheck',
-    allowedTabs: ['dash', 'ing', 'plat', 'prov', 'ped', 'comp', 'fin', 'rep'],
+    allowedTabs: ['dash', 'ing', 'plat', 'cat', 'usr', 'prov', 'ped', 'comp', 'fin', 'rep'],
     defaultTab: 'dash',
     canEditIng: true,
     canEditPlat: true,
+    canEditCat: true,
+    canEditUsr: true,
     salesOnlyReports: false
   },
   [ROLES.MESERO]: {
     label: 'Mesero',
-    description: 'Módulos de salón: Inicio, Pedidos (crear y ver) y Platos (solo ver, sin crear ni eliminar).',
+    description: 'Módulos de salón: Inicio, Pedidos (crear y ver), Platos y Categorías (solo ver, sin crear ni eliminar).',
     badgeClass: 'role-badge-mesero',
     color: '#0F6B6F',
     iconName: 'Utensils',
-    allowedTabs: ['dash', 'ped', 'plat'],
+    allowedTabs: ['dash', 'ped', 'plat', 'cat'],
     defaultTab: 'ped',
     canEditIng: false,
     canEditPlat: false, // Solo ver, sin crear, editar ni eliminar
+    canEditCat: false,
+    canEditUsr: false,
     salesOnlyReports: false
   },
   [ROLES.CAJERO]: {
     label: 'Cajero',
-    description: 'Módulos de caja: Inicio, Pedidos (crear y ver), Ingresos y egresos, Reportes (solo ventas), Ingredientes y Platos (solo ver).',
+    description: 'Módulos de caja: Inicio, Pedidos (crear y ver), Ingresos y egresos, Reportes (solo ventas), Ingredientes, Platos y Categorías (solo ver).',
     badgeClass: 'role-badge-cajero',
     color: '#D69715',
     iconName: 'WalletCards',
-    allowedTabs: ['dash', 'ing', 'plat', 'ped', 'fin', 'rep'],
+    allowedTabs: ['dash', 'ing', 'plat', 'cat', 'ped', 'fin', 'rep'],
     defaultTab: 'ped',
     canEditIng: false, // Solo ver, sin editar
     canEditPlat: false, // Solo ver, sin editar
+    canEditCat: false,
+    canEditUsr: false,
     salesOnlyReports: true // Solo reportes de ventas
   }
 };

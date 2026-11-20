@@ -1,5 +1,5 @@
 """
-seed.py — Carga los ingredientes y platos iniciales del restaurante en la base de datos.
+seed.py — Carga los datos iniciales del restaurante en la base de datos (Categorías, Ingredientes, Platos, Usuarios y Pedidos de prueba).
 Idempotente: si se ejecuta dos veces no duplica registros.
 
 Uso (desde la raíz del proyecto):
@@ -20,7 +20,7 @@ from backend.config import Config
 
 
 # ---------------------------------------------------------------------------
-# Datos de seed (extraídos de restaurante-gestion-v2/src/data/seedData.js)
+# Datos de seed
 # ---------------------------------------------------------------------------
 CATEGORIAS = ["Platos fuertes", "Sopas"]
 
@@ -73,6 +73,18 @@ PLATOS = [
     },
 ]
 
+USUARIOS = [
+    {"nombre": "Carlos Morales", "correo": "carlos.morales@sabores.bo", "rol": "administrador"},
+    {"nombre": "Lucía Mamani", "correo": "lucia.mamani@sabores.bo", "rol": "mesero"},
+    {"nombre": "Mateo Quispe", "correo": "mateo.quispe@sabores.bo", "rol": "cajero"},
+]
+
+PEDIDOS_EJEMPLO = [
+    {"usuario_correo": "carlos.morales@sabores.bo", "plato_nombre": "Pique macho", "cantidad": 2},
+    {"usuario_correo": "lucia.mamani@sabores.bo", "plato_nombre": "Sopa de maní", "cantidad": 1},
+    {"usuario_correo": "mateo.quispe@sabores.bo", "plato_nombre": "Silpancho", "cantidad": 3},
+]
+
 
 def seed(db_path=None):
     """Ejecuta el seed. Retorna un dict con estadísticas."""
@@ -88,13 +100,17 @@ def seed(db_path=None):
         "ingredientes_creados": 0,
         "ingredientes_omitidos": 0,
         "platos_creados": 0,
-        "platos_omitidos": 0
+        "platos_omitidos": 0,
+        "usuarios_creados": 0,
+        "usuarios_omitidos": 0,
+        "pedidos_creados": 0,
+        "pedidos_omitidos": 0
     }
 
     try:
         cursor = conn.cursor()
 
-        # 1. Insertar categorías si no existen
+        # 1. Categorías
         cat_ids = {}
         for nombre_cat in CATEGORIAS:
             cursor.execute("SELECT id FROM Categoria WHERE nombre = ?;", (nombre_cat,))
@@ -109,7 +125,7 @@ def seed(db_path=None):
 
         conn.commit()
 
-        # 2. Insertar ingredientes si no existen (verificar por nombre ignorando mayúsculas)
+        # 2. Ingredientes
         for ing in INGREDIENTES:
             cursor.execute("SELECT id FROM Ingrediente WHERE LOWER(nombre) = LOWER(?);", (ing["nombre"],))
             if cursor.fetchone():
@@ -127,10 +143,13 @@ def seed(db_path=None):
 
         conn.commit()
 
-        # 3. Insertar platos si no existen (verificar por nombre)
+        # 3. Platos
+        plato_ids = {}
         for plato in PLATOS:
             cursor.execute("SELECT id FROM Plato WHERE nombre = ?;", (plato["nombre"],))
-            if cursor.fetchone():
+            row = cursor.fetchone()
+            if row:
+                plato_ids[plato["nombre"]] = row["id"]
                 stats["platos_omitidos"] += 1
                 print(f"  [·] Plato ya existe (omitido): {plato['nombre']}")
                 continue
@@ -143,8 +162,57 @@ def seed(db_path=None):
                    VALUES (?, ?, ?, ?, ?);""",
                 (plato["nombre"], plato["precio"], id_categoria, plato["imagen"], ingredientes_json)
             )
+            plato_ids[plato["nombre"]] = cursor.lastrowid
             stats["platos_creados"] += 1
             print(f"  [+] Plato creado: {plato['nombre']} (Bs {plato['precio']:.2f})")
+
+        conn.commit()
+
+        # 4. Usuarios
+        user_ids = {}
+        for u in USUARIOS:
+            cursor.execute("SELECT id FROM Usuario WHERE LOWER(correo) = LOWER(?);", (u["correo"],))
+            row = cursor.fetchone()
+            if row:
+                user_ids[u["correo"]] = row["id"]
+                stats["usuarios_omitidos"] += 1
+                print(f"  [·] Usuario ya existe (omitido): {u['nombre']} ({u['rol']})")
+                continue
+
+            cursor.execute(
+                "INSERT INTO Usuario (nombre, correo, rol) VALUES (?, ?, ?);",
+                (u["nombre"], u["correo"], u["rol"])
+            )
+            user_ids[u["correo"]] = cursor.lastrowid
+            stats["usuarios_creados"] += 1
+            print(f"  [+] Usuario creado: {u['nombre']} ({u['rol']})")
+
+        conn.commit()
+
+        # 5. Pedidos de ejemplo
+        for ped in PEDIDOS_EJEMPLO:
+            u_id = user_ids.get(ped["usuario_correo"])
+            p_id = plato_ids.get(ped["plato_nombre"])
+
+            if not u_id or not p_id:
+                continue
+
+            # Verificar si ya existe un pedido idéntico para no duplicar
+            cursor.execute(
+                "SELECT id FROM Pedido WHERE idUsuario = ? AND idPlato = ? AND cantidad = ?;",
+                (u_id, p_id, ped["cantidad"])
+            )
+            if cursor.fetchone():
+                stats["pedidos_omitidos"] += 1
+                print(f"  [·] Pedido ya existe (omitido): {ped['plato_nombre']} x{ped['cantidad']}")
+                continue
+
+            cursor.execute(
+                "INSERT INTO Pedido (idUsuario, idPlato, cantidad) VALUES (?, ?, ?);",
+                (u_id, p_id, ped["cantidad"])
+            )
+            stats["pedidos_creados"] += 1
+            print(f"  [+] Pedido creado: {ped['plato_nombre']} x{ped['cantidad']}")
 
         conn.commit()
     finally:
@@ -162,4 +230,8 @@ if __name__ == "__main__":
     print(f"Ingredientes omitidos: {result['ingredientes_omitidos']}")
     print(f"Platos creados       : {result['platos_creados']}")
     print(f"Platos omitidos      : {result['platos_omitidos']}")
+    print(f"Usuarios creados     : {result['usuarios_creados']}")
+    print(f"Usuarios omitidos    : {result['usuarios_omitidos']}")
+    print(f"Pedidos creados      : {result['pedidos_creados']}")
+    print(f"Pedidos omitidos     : {result['pedidos_omitidos']}")
     print("===========================================")

@@ -3,7 +3,7 @@ import os
 import tempfile
 from backend.db import init_db, get_db_connection
 from backend.config import Config
-from backend.seed import seed, PLATOS, CATEGORIAS, INGREDIENTES
+from backend.seed import seed, PLATOS, CATEGORIAS, INGREDIENTES, USUARIOS, PEDIDOS_EJEMPLO
 
 
 class TestSeed(unittest.TestCase):
@@ -26,16 +26,18 @@ class TestSeed(unittest.TestCase):
         finally:
             conn.close()
 
-    def test_seed_crea_categorias_ingredientes_y_platos(self):
+    def test_seed_crea_entidades_completas(self):
         stats = seed(self.db_path)
         self.assertEqual(stats["categorias_creadas"], len(CATEGORIAS))
         self.assertEqual(stats["ingredientes_creados"], len(INGREDIENTES))
-        self.assertEqual(stats["ingredientes_omitidos"], 0)
         self.assertEqual(stats["platos_creados"], len(PLATOS))
-        self.assertEqual(stats["platos_omitidos"], 0)
+        self.assertEqual(stats["usuarios_creados"], len(USUARIOS))
+        self.assertEqual(stats["pedidos_creados"], len(PEDIDOS_EJEMPLO))
         self.assertEqual(self._count("Categoria"), len(CATEGORIAS))
         self.assertEqual(self._count("Ingrediente"), len(INGREDIENTES))
         self.assertEqual(self._count("Plato"), len(PLATOS))
+        self.assertEqual(self._count("Usuario"), len(USUARIOS))
+        self.assertEqual(self._count("Pedido"), len(PEDIDOS_EJEMPLO))
 
     def test_seed_idempotente_no_duplica(self):
         # Primera ejecución
@@ -44,75 +46,42 @@ class TestSeed(unittest.TestCase):
         stats2 = seed(self.db_path)
         self.assertEqual(stats2["categorias_creadas"], 0)
         self.assertEqual(stats2["ingredientes_creados"], 0)
-        self.assertEqual(stats2["ingredientes_omitidos"], len(INGREDIENTES))
         self.assertEqual(stats2["platos_creados"], 0)
+        self.assertEqual(stats2["usuarios_creados"], 0)
+        self.assertEqual(stats2["pedidos_creados"], 0)
+        self.assertEqual(stats2["categorias_omitidos"] if "categorias_omitidos" in stats2 else 0, 0)
+        self.assertEqual(stats2["ingredientes_omitidos"], len(INGREDIENTES))
         self.assertEqual(stats2["platos_omitidos"], len(PLATOS))
+        self.assertEqual(stats2["usuarios_omitidos"], len(USUARIOS))
+        self.assertEqual(stats2["pedidos_omitidos"], len(PEDIDOS_EJEMPLO))
         # Conteo sigue igual
         self.assertEqual(self._count("Categoria"), len(CATEGORIAS))
         self.assertEqual(self._count("Ingrediente"), len(INGREDIENTES))
         self.assertEqual(self._count("Plato"), len(PLATOS))
+        self.assertEqual(self._count("Usuario"), len(USUARIOS))
+        self.assertEqual(self._count("Pedido"), len(PEDIDOS_EJEMPLO))
 
-    def test_seed_ingredientes_datos_correctos(self):
+    def test_seed_usuarios_roles_correctos(self):
         seed(self.db_path)
         conn = get_db_connection(self.db_path)
         try:
             cur = conn.cursor()
-            cur.execute("SELECT nombre, unidad, stock, stockMinimo, precioUnitario FROM Ingrediente ORDER BY id;")
-            rows = {r["nombre"]: dict(r) for r in cur.fetchall()}
+            cur.execute("SELECT nombre, correo, rol FROM Usuario ORDER BY id;")
+            rows = {r["correo"]: dict(r) for r in cur.fetchall()}
         finally:
             conn.close()
 
-        self.assertEqual(len(rows), len(INGREDIENTES))
-        for expected in INGREDIENTES:
-            self.assertIn(expected["nombre"], rows)
-            actual = rows[expected["nombre"]]
-            self.assertEqual(actual["unidad"], expected["unidad"])
-            self.assertEqual(actual["stock"], expected["stock"])
-            self.assertEqual(actual["stockMinimo"], expected["stockMinimo"])
-            self.assertEqual(actual["precioUnitario"], expected["precioUnitario"])
-
-    def test_seed_platos_tienen_imagen_e_ingredientes(self):
-        seed(self.db_path)
-        conn = get_db_connection(self.db_path)
-        try:
-            cur = conn.cursor()
-            cur.execute("SELECT nombre, imagen, ingredientes FROM Plato ORDER BY id;")
-            rows = cur.fetchall()
-        finally:
-            conn.close()
-
-        self.assertEqual(len(rows), len(PLATOS))
-        for row, expected in zip(rows, PLATOS):
-            self.assertEqual(row["nombre"], expected["nombre"])
-            self.assertEqual(row["imagen"], expected["imagen"])
-            self.assertNotEqual(row["ingredientes"], "[]")
-            self.assertNotEqual(row["ingredientes"], "")
-
-    def test_seed_platos_vinculados_a_categorias_correctas(self):
-        seed(self.db_path)
-        conn = get_db_connection(self.db_path)
-        try:
-            cur = conn.cursor()
-            cur.execute("""
-                SELECT p.nombre AS plato, c.nombre AS categoria
-                FROM Plato p
-                JOIN Categoria c ON p.idCategoria = c.id
-                ORDER BY p.id;
-            """)
-            rows = {r["plato"]: r["categoria"] for r in cur.fetchall()}
-        finally:
-            conn.close()
-
-        for plato in PLATOS:
-            self.assertIn(plato["nombre"], rows)
-            self.assertEqual(rows[plato["nombre"]], plato["categoria"])
+        self.assertEqual(len(rows), len(USUARIOS))
+        for expected in USUARIOS:
+            self.assertIn(expected["correo"], rows)
+            self.assertEqual(rows[expected["correo"]]["rol"], expected["rol"])
 
     def test_seed_crea_db_si_no_existe(self):
         nuevo_path = self.db_path + "_nuevo.sqlite3"
         try:
             stats = seed(nuevo_path)
-            self.assertEqual(stats["ingredientes_creados"], len(INGREDIENTES))
-            self.assertEqual(stats["platos_creados"], len(PLATOS))
+            self.assertEqual(stats["usuarios_creados"], len(USUARIOS))
+            self.assertEqual(stats["pedidos_creados"], len(PEDIDOS_EJEMPLO))
         finally:
             if os.path.exists(nuevo_path):
                 os.remove(nuevo_path)

@@ -13,9 +13,11 @@
 - **API conectada al frontend**:
   - `Platos`: `GET /platos`, `POST /platos`, `DELETE /platos/<id>`.
   - `Ingredientes`: `GET /ingredientes`, `POST /ingredientes`, `PUT /ingredientes/<id>`, `DELETE /ingredientes/<id>`.
-  - Fallback transparente a `localStorage` si el backend está apagado.
-  - Validación antes de borrar: si un plato utiliza el ingrediente en su receta, la eliminación se bloquea y avisa al usuario.
-- **seed.py** idempotente carga las 2 categorías, los 8 ingredientes iniciales y los 5 platos típicos bolivianos con imagen e ingredientes (ejecutar con `python -m backend.seed`).
+  - `Categorías`: CRUD completo con `GET`, `POST`, `PUT`, `DELETE /categorias/<id>`, con prevención de borrado 409 si tiene platos y vista React dedicada.
+  - `Usuarios`: CRUD completo con `GET`, `POST`, `PUT`, `DELETE /usuarios/<id>`, select de rol (administrador, mesero, cajero), prevención de borrado 409 si tiene pedidos y vista React dedicada.
+  - Aviso claro en pantalla en Categorías y Usuarios cuando el servidor backend está desconectado.
+  - Fallback transparente a `localStorage` en los módulos locales existentes.
+- **seed.py** idempotente carga las 2 categorías, los 8 ingredientes iniciales, los 5 platos típicos bolivianos, los 3 usuarios con roles y 3 pedidos de prueba (ejecutar con `python -m backend.seed`).
 - **Plato** tiene campos `imagen` (nombre .jpg) e `ingredientes` (JSON `[["nombre", qty_kg], ...]`).
 - **Ingrediente** tiene `id`, `nombre` (UNIQUE), `unidad`, `stock`, `stockMinimo`, `precioUnitario`.
 - **Resolución de recetas en tarjetas**: `apiPlatoToLocal` convierte nombres de ingredientes de la API a IDs de `data.ing` usando comparación sin tildes ni mayúsculas (`normalizar()`).

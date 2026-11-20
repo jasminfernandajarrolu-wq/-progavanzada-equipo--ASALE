@@ -12,6 +12,8 @@ import { OrdersView } from './components/views/OrdersView';
 import { PurchasesView } from './components/views/PurchasesView';
 import { FinancesView } from './components/views/FinancesView';
 import { ReportsView } from './components/views/ReportsView';
+import { CategoriesView } from './components/views/CategoriesView';
+import { UsersView } from './components/views/UsersView';
 import { ROLE_PERMISSIONS } from './data/authData';
 
 /**
@@ -82,7 +84,17 @@ export default function App() {
     addFinanceRecord,
     deleteItem,
     recordOrder,
-    resetToSeed
+    resetToSeed,
+    categorias,
+    categoriasError,
+    addCategoria,
+    updateCategoria,
+    deleteCategoria,
+    usuarios,
+    usuariosError,
+    addUsuario,
+    updateUsuario,
+    deleteUsuario
   } = useRestaurantState();
 
   useEffect(() => {
@@ -224,6 +236,17 @@ export default function App() {
           />
         )}
 
+        {allowedTabs.includes('cat') && activeTab === 'cat' && (
+          <CategoriesView
+            categorias={categorias}
+            categoriasError={categoriasError}
+            onAddCategoria={addCategoria}
+            onUpdateCategoria={updateCategoria}
+            onDeleteCategoria={deleteCategoria}
+            readOnly={!roleConfig?.canEditCat}
+          />
+        )}
+
         {allowedTabs.includes('prov') && activeTab === 'prov' && (
           <SuppliersView
             data={data}
@@ -261,6 +284,17 @@ export default function App() {
             getFinancialSum={getFinancialSum}
             onResetToSeed={resetToSeed}
             salesOnly={!!roleConfig?.salesOnlyReports}
+          />
+        )}
+
+        {allowedTabs.includes('usr') && activeTab === 'usr' && (
+          <UsersView
+            usuarios={usuarios}
+            usuariosError={usuariosError}
+            onAddUsuario={addUsuario}
+            onUpdateUsuario={updateUsuario}
+            onDeleteUsuario={deleteUsuario}
+            readOnly={!roleConfig?.canEditUsr}
           />
         )}
 
